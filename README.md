@@ -2,7 +2,7 @@
 
 ## Problema:
 
-Dado un laberinto el robot debe recorrerlo en su tottalidad de la manera mas eficiente posible solo conociendo las partes que ya exploró, descubriendolo gradualmente.
+Dado un laberinto el robot debe recorrerlo en su totalidad de la manera mas eficiente posible solo conociendo las partes que ya exploró, descubriendolo gradualmente.
 
 ![Laberinto](./images/laberinto.png)
 
@@ -56,3 +56,42 @@ Video de ejemplo de una ronda de la competencia, utilizando el simulador:
 https://www.youtube.com/watch?v=C_sho03AJmo
 
 ## Como reproducir pruebas y entorno
+
+Instalar python 3.8.10 y pip:
+
+https://www.python.org/downloads/release/python-3810/
+
+Clonar repositorio
+
+```
+git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
+```
+
+instalar pipenv
+
+```
+pip install pipenv
+```
+
+crear entorno virutal
+
+```
+pipenv shell --python 3.8.10
+```
+
+instalar dependencias
+
+```
+pipenv install requirements.txt
+```
+
+correr entorno
+```
+#desde la shell del venv
+python3 game.py
+```
+
+
+
+
+
