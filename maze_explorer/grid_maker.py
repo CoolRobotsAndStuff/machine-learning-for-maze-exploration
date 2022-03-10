@@ -1,3 +1,4 @@
+import string
 import numpy as np
 import math
 
@@ -8,19 +9,21 @@ Requirements:
 2 = Status (ocupied, not_occupied, undefined)
 3 = Tile type (only if tile: undefined, start, normal, connection1-2, connection1-3, connection2-3, swamp, hole)
 
+undefined = no conozco el tipo de casilla
 """
 
 class Node():
-    def __init__(self, node_type, status="undefined", tile_type="undefined"):
-        self.node_type = node_type  # string
+    def __init__(self, node_type:string, status:string="undefined", tile_type:string="undefined"):
+        self.node_type = node_type
         self.status = status
         self.tile_type = tile_type if node_type == "tile" else "undefined"
         
 
-        self.node_type_conv = {"tile":0.0, "vortex":0.5, "wall":1.0}
+        self.node_type_conv = {"tile":0.0, "vortex":0.5, "wall":1.0} #dic for converting to num values
+        
         self.status_conv = {"occupied":1.0,
                             "undefined":0.5,
-                            "not_occupied":0.0}
+                            "not_occupied":0.0}# same dic 
         self.tile_type_conv = {"undefined":0.0, 
                                 "normal": 0.1, 
                                 "start": 0.2, 
@@ -28,11 +31,11 @@ class Node():
                                 "connection1-3":0.4, 
                                 "connection2-3": 0.5, 
                                 "swamp": 0.6, 
-                                "hole": 0.7}
+                                "hole": 0.7} #same dic
 
         
     
-    def get_representation(self):
+    def get_representation(self) -> list: #tipo de nodo tipo de estado  tipo de casilla 
         rep = []
         rep.append(self.node_type_conv[self.node_type])
         rep.append(self.status_conv[self.status])
@@ -45,7 +48,7 @@ class Node():
             return "■"
         elif self.node_type == "wall":
             return "-"
-        elif self.node_type == "vortex":
+        elif self.node_type == "vortex": #vertice
             return "+"
         elif self.node_type == "tile":
             return "□"
@@ -61,7 +64,7 @@ class Node():
             return "□"
 
 
-def make_grid(dimensions):
+def make_grid(dimensions) -> list:
     grid = list()
     for y in range(dimensions[0]):
         row = list()
@@ -80,6 +83,7 @@ def make_grid(dimensions):
         grid.append(row)
     return grid
 
+#!!---------
 if __name__ == "__main__":
 
     grid = make_grid((11, 11))
