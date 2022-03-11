@@ -101,7 +101,7 @@ pipenv shell --python 3.8.10
 instalar dependencias
 
 ```
-pipenv install requirements.txt
+pipenv install
 ```
 
 correr entorno
@@ -113,6 +113,9 @@ python3 game.py
 
 ## Dudas y Preguntas
 
+   * **Que modelo es mas conveniente para entrenar con respecto a nuestro problema?**
+   * **Que librerias son mas recomendables?**
+   
    
    
 ## Recursos Utiles
