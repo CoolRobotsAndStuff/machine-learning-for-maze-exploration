@@ -1,9 +1,13 @@
 <div align="center">
-<h1>Machine learning aplicado a resolución de laberintos en robotica simulada<h1/>
+<h1>Machine Learning aplicado a resolución de laberintos en robótica simulada<h1/>
 
 </div>
 
-![IITA](./images/iita.png)
+<div align="center">
+<img src="./images/iita.png" alt="drawing">
+</div>
+
+<br>
 
 Estamos participando en la competencia de rescate simulado de la RoboCup, utilizando el simulador de  Webots . En esta categoría el robot debe recorrer un laberinto, buscando víctimas y reportando su posición. A raíz de esta consigna, surge el problema de cómo recorrerlo en el menor tiempo posible, para el cual pensamos en aplicar machine larning.
 
@@ -24,9 +28,11 @@ Seguimos incursionando en el aprendizaje teorico y practico de posibles modelos 
 
 Para representar el laberinto utilizamos una serie de nodos organizados en una array bidimensional. Cada nodo puede representar una casilla, una pared o un vértice, como se muestra a continuación:
 
-*Dado un laberinto:*
+*Dada una grilla:*
 
-![Lo que buscamos representar](./images/tile_vortex_wall.png)
+<div align="center">
+<img src="./images/tile_vortex_wall.png" alt="drawing" width="400">
+</div>
 
 Lo representamos de la siguiente manera, donde:
 
@@ -46,7 +52,7 @@ C = nodo de casilla
 ```
                      
    
-## El Nodo:
+### El Nodo
 
 Cada **Nodo** posee los sigueintes datos:
 
@@ -73,7 +79,7 @@ Cada **Nodo** posee los sigueintes datos:
 
     **Todas ellas tienen distintas propiedades en la simulación.**
 
-## Ejemplo
+### Ejemplo
 
 ![Ejemplo](./images/laberinto.png)
    
