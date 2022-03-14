@@ -3,9 +3,9 @@
 
 </div>
 
-![IITA](https://i0.wp.com/iita.com.ar/wp_content/uploads/2021/12/cropped_LogoITTA_versiones_01_02_02.png?fit=2618%2C977&ssl=1)
+![IITA](./images/iita.png)
 
-Estamos participando en la competencia de rescate simulado en webots de la RoboCup. En esta categoría el robot debe recorrer un laberinto, buscando víctimas y reportando su posición. A raíz de esta consigna, surge el problema de cómo recorrerlo en el menor tiempo posible, para el cual pensamos en aplicar machine larning.
+Estamos participando en la competencia de rescate simulado de la RoboCup, utilizando el simulador de  Webots . En esta categoría el robot debe recorrer un laberinto, buscando víctimas y reportando su posición. A raíz de esta consigna, surge el problema de cómo recorrerlo en el menor tiempo posible, para el cual pensamos en aplicar machine larning.
 
 ## Problema:
 
@@ -24,6 +24,8 @@ Seguimos incursionando en el aprendizaje teorico y practico de posibles modelos 
 
 Para representar el laberinto utilizamos una serie de nodos organizados en una array bidimensional. Cada nodo puede representar una casilla, una pared o un vértice, como se muestra a continuación:
 
+*Dado un laberinto:*
+
 ![Lo que buscamos representar](./images/tile_vortex_wall.png)
 
 Lo representamos de la siguiente manera, donde:
@@ -34,25 +36,23 @@ P = nodo de pared
 
 C = nodo de casilla
 
+```
+[[V, P, V, P, V],                
+ [P, C, P, C, P],                 
+ [V, P, V, P, V],                  
+ [P, C, P, C, P],                 
+ [V, P, V, P, V]]
 
-  V   P   V   P   V  
-                     
-  P   C   P   C   P  
-                     
-  V   P   V   P   V  
-                     
-  P   C   P   C   P  
-                     
-  V   P   V   P   V  
+```
                      
    
 ## El Nodo:
 
-Cada **Nodo** posee los digueintes datos:
+Cada **Nodo** posee los sigueintes datos:
 
 * Tipo de nodo, puede ser:
     * *casilla*
-    * *vertice*
+    * *vértice*
     * *pared*
 
 * Estado, puede ser:
@@ -72,9 +72,11 @@ Cada **Nodo** posee los digueintes datos:
     * *checkpoint*
 
     **Todas ellas tienen distintas propiedades en la simulación.**
+
+## Ejemplo
+
+![Ejemplo](./images/laberinto.png)
    
-
-
 
 ## Como reproducir pruebas y entorno
 
