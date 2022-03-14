@@ -1,9 +1,6 @@
 <div align="center">
 <h1>Machine Learning aplicado a resolución de laberintos en robótica simulada<h1/>
 
-</div>
-
-<div align="center">
 <img src="./images/iita.png" alt="drawing">
 </div>
 
@@ -22,7 +19,7 @@ https://www.youtube.com/watch?v=C_sho03AJmo
    
 Contamos con una **version simplificada** del problema en python para evitar utilizar el simulador de webots para entrenar modelos y realizar pruevas, **pero es nuestro objetivo final trasladarlo a ese simulador.**
    
-Seguimos incursionando en el aprendizaje teorico y practico de posibles modelos acordes a la problematica,para evaluar su desempeño y luego implementar los mas optimos
+Seguimos avanzando en el aprendizaje teórico y práctico de posibles modelos acordes a la problemática, para evaluar su desempeño y luego implementar los óptimos.
 
 ## El laberinto
 
@@ -49,8 +46,7 @@ C = nodo de casilla
  [P, C, P, C, P],                 
  [V, P, V, P, V]]
 
-```
-                     
+```         
    
 ### El Nodo
 
@@ -83,6 +79,10 @@ Cada **Nodo** posee los sigueintes datos:
 
 ![Ejemplo](./images/laberinto.png)
    
+## Dudas y Preguntas
+
+   * **¿Qué modelo es conveniente entrenar con respecto a nuestro problema?**
+   * **¿Qué librerias son recomendables?**
 
 ## Como reproducir pruebas y entorno
 
@@ -119,16 +119,8 @@ correr entorno
 #desde la shell del venv
 python3 game.py
 ```
-
-
-## Dudas y Preguntas
-
-   * **Que modelo es mas conveniente para entrenar con respecto a nuestro problema?**
-   * **Que librerias son mas recomendables?**
    
-   
-   
-## Recursos Utiles
+## Recursos Utiles (para nosotros)
    
    Curso introductorio a TensorFlow:
    
