@@ -3,7 +3,7 @@
 
 </div>
 
-![IITA](https://i0.wp.com/iita.com.ar/wp content/uploads/2021/12/cropped LogoITTA versiones 01 02 02.png?fit=2618%2C977&ssl=1)
+![IITA](https://i0.wp.com/iita.com.ar/wp_content/uploads/2021/12/cropped_LogoITTA_versiones_01_02_02.png?fit=2618%2C977&ssl=1)
 
 Estamos participando en la competencia de rescate simulado en webots de la RoboCup. En esta categoría el robot debe recorrer un laberinto, buscando víctimas y reportando su posición. A raíz de esta consigna, surge el problema de cómo recorrerlo en el menor tiempo posible, para el cual pensamos en aplicar machine larning.
 
@@ -29,8 +29,11 @@ Para representar el laberinto utilizamos una serie de nodos organizados en una a
 Lo representamos de la siguiente manera, donde:
 
 V = nodo de vertice
+
 P = nodo de pared
+
 C = nodo de casilla
+
 
   V   P   V   P   V  
                      
