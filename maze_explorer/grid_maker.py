@@ -44,6 +44,8 @@ class Node():
         return rep
 
     def __str__(self) -> str:
+        if self.status == "undefined":
+            return "?"
         if self.status == "occupied":
             return "■"
         elif self.node_type == "wall":
@@ -54,6 +56,8 @@ class Node():
             return "□"
 
     def __repr__(self) -> str:
+        if self.status == "undefined":
+            return "?"
         if self.status == "occupied":
             return "■"
         elif self.node_type == "wall":

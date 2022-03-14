@@ -13,20 +13,15 @@ from grid_maker import Node, make_grid
 class Maze_game():
     def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:string="up"):
 
-        self.raw_grid = copy.deepcopy(grid) 
+        self.entire_grid = copy.deepcopy(grid)  # El mundo
         
         self.detection_distance = detection_distance
-        self.entire_grid = self.convert_grid(self.raw_grid) #el mundo
-        self.grid_shape = self.entire_grid.shape
+        self.grid_shape = [len(self.entire_grid), len(self.entire_grid[0])]
 
-        self.disc_mask = np.ones(self.grid_shape, dtype=np.bool_)
-        self.disc_mask[0:-1, 0:-1, 0] = False #oculta todo menos tipo de nodo
-        print(self.disc_mask) 
-        self.dicovered_grid = np.zeros(self.grid_shape) #!TODO REFACTOR
-        #!REFACTOR MAYBE
-        self.valid_orientations = ("up", "down", "left", "right")
-        self.valid_actions = ["up", "down", "left", "right"]
-        self.actions_pos_dict = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
+
+        self.dicovered_grid = self.create_discovered(self.entire_grid)
+
+        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
 
         self.robot_position = initial_position
         self.robot_orientation = initial_orientation
@@ -35,6 +30,19 @@ class Maze_game():
         self.time_to_turn = 1
 
         self.updateMask()
+
+    def create_discovered(self, grid):
+        disc_grid = []
+        for row in grid:
+            disc_row = []
+            for value in row:
+                new_value = copy.deepcopy(value)
+                new_value.status = "undefined"
+                new_value.tile_type = "undefined"
+                disc_row.append(new_value)
+            disc_grid.append(copy.deepcopy(disc_row))
+        return disc_grid
+            
     
     # Pre-processes the given grid
     def convert_grid(self, raw_grid): #Convert nodes to numbers
@@ -44,7 +52,6 @@ class Maze_game():
             for value in column:
                 f_col.append(value.get_representation())
             final_list.append(f_col)
-
 
         return np.array(final_list)
 
@@ -69,17 +76,21 @@ class Maze_game():
         
         # descubrir de la mascara todos indices dentro del cuadrado 
         #falso = ya descubierto 
-        self.disc_mask[min_x:max_x, min_y:max_y, 1:-1] = False
+        for x in range(min_x, max_x):
+            for y in range(min_y, max_y):
+                self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
+                self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type
+
 
     # Executes a movement
     def move(self, move:string):
-        if move not in self.valid_actions:
+        if move not in self.directions.keys():
             return False, 0 # no logro moverse, tardo 0ut
 
         # Calculate the new position
-        new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.actions_pos_dict[move])]
+        new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
         #calcula la posicion por la que paso para llegar a new_pos
-        middle_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.actions_pos_dict[move])]
+        middle_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
 
         # Check if the new position is valid
         if self.is_valid_position(new_pos) and self.is_valid_position(middle_pos):
@@ -110,17 +121,15 @@ class Maze_game():
 
         # Is the position not occupied
         if is_valid:
-            #1 = esta ocupado
-            is_valid = self.entire_grid[position[0]][position[1]][1] != 1
+            is_valid = self.entire_grid[position[0]][position[1]].status != "occupied"
 
         return is_valid
 
-    # Runs a movement, returns if it was a valid one, the discovered grid and the time taken
-    # to do the movement
+    # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
     def step(self, movement):
         valid_movement, time_taken = self.move(movement)
         self.updateMask()
-        return valid_movement, self.get_grid(), time_taken
+        return valid_movement, self.dicovered_grid, time_taken
         
 
     def print_status(self):
@@ -129,28 +138,24 @@ class Maze_game():
 
     # prints the grid for easy visualization
     def print_grid(self):
-        mx = ma.fix_invalid(self.entire_grid, self.disc_mask, fill_value=0.5)
-        final_grid = mx.filled(0.5)
-        for x, row in enumerate(final_grid): #self.entire_grid):
+        for x, row in enumerate(self.dicovered_grid):
             for y, value in enumerate(row):
                 if [x, y] == self.robot_position:
-                    print("Rob" + " ", end="")
+                    print("R" + " ", end="")
                 else:
-                    print(str(value[0]) + " ", end="")
+                    print(str(value) + " ", end="")
             print("\n", end="")
 
         print("")
 
-    def get_grid(self):
-        #check this
-        mx = ma.fix_invalid(self.entire_grid, self.disc_mask, fill_value=0.5)
-        final_grid = mx.filled(0.5)
-
-        return final_grid
 
 if __name__ == "__main__":
     grid = make_grid((7, 7))
-    maze = Maze_game(grid, 1, initial_position=[0, 0])
+
+    for value in grid[-1]:
+        value.status = "occupied"
+
+    maze = Maze_game(grid, 2, initial_position=[0, 0])
     maze.print_grid()
     while True:
             maze.print_grid()
