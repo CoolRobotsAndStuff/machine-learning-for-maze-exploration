@@ -88,7 +88,7 @@ Cada **Nodo** posee los sigueintes datos:
 
 Instalar python 3.8.10 y pip:
 
-https://www.python.org/downloads/release/python 3810/
+https://www.python.org/downloads/release/python-3810/
 
 Clonar repositorio
 
