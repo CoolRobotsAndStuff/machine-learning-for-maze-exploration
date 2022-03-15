@@ -93,7 +93,7 @@ https://www.python.org/downloads/release/python-3810/
 Clonar repositorio
 
 ```
-git clone https://github.com/CoolRobotsAndStuff/machine learning for maze exploration.git
+git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
 ```
 
 instalar pipenv
