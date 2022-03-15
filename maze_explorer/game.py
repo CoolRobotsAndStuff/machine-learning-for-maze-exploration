@@ -1,5 +1,3 @@
-import string
-from typing import List
 import numpy as np
 import numpy.ma as ma
 import copy
@@ -11,7 +9,7 @@ from grid_maker import Node, make_grid
 @initial_orientation: donde empieza mirando 
 """
 class Maze_game():
-    def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:string="up"):
+    def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:str="up"):
 
         self.entire_grid = copy.deepcopy(grid)  # El mundo
         
@@ -83,7 +81,7 @@ class Maze_game():
 
 
     # Executes a movement
-    def move(self, move:string):
+    def move(self, move:str):
         if move not in self.directions.keys():
             return False, 0 # no logro moverse, tardo 0ut
 
@@ -170,10 +168,6 @@ if __name__ == "__main__":
 
     
 
-
-    
-
-        
         # Just ignore this used for lidar
 """
         for x in range(min_x, max_x):
