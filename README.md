@@ -14,12 +14,18 @@ Estamos participando en la competencia de rescate simulado de la RoboCup, utiliz
 
 Video de ejemplo de una ronda de la competencia, utilizando el simulador:
 https://www.youtube.com/watch?v=C_sho03AJmo
+
    
 ## Avances
    
 Contamos con una **version simplificada** del problema en python para evitar utilizar el simulador de webots para entrenar modelos y realizar pruevas, **pero es nuestro objetivo final trasladarlo a ese simulador.**
    
 Seguimos avanzando en el aprendizaje teórico y práctico de posibles modelos acordes a la problemática, para evaluar su desempeño y luego implementar los óptimos.
+
+Nuestra versión simplificada en un mundo de ejemplo:
+<div align="center">
+<img src="./images/version_simple.png" alt="drawing" width="400">
+</div>
 
 ## El laberinto
 

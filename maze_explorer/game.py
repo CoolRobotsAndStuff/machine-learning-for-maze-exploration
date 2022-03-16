@@ -1,5 +1,3 @@
-import string
-from typing import List
 import numpy as np
 import numpy.ma as ma
 import copy
@@ -11,7 +9,7 @@ from grid_maker import Node, make_grid
 @initial_orientation: donde empieza mirando 
 """
 class Maze_game():
-    def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:string="up"):
+    def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:str="up"):
 
         self.entire_grid = copy.deepcopy(grid)  # El mundo
         
@@ -83,7 +81,7 @@ class Maze_game():
 
 
     # Executes a movement
-    def move(self, move:string):
+    def move(self, move:str):
         if move not in self.directions.keys():
             return False, 0 # no logro moverse, tardo 0ut
 
@@ -138,25 +136,82 @@ class Maze_game():
 
     # prints the grid for easy visualization
     def print_grid(self):
+
+        robot_right = [self.robot_position[0], self.robot_position[1] + 1]
+        robot_left = [self.robot_position[0], self.robot_position[1] - 1]
+        robot_up = [self.robot_position[0] - 1, self.robot_position[1]]
+        robot_down = [self.robot_position[0] + 1, self.robot_position[1]]
+
         for x, row in enumerate(self.dicovered_grid):
             for y, value in enumerate(row):
                 if [x, y] == self.robot_position:
-                    print("R" + " ", end="")
+                    print("ob", end="")
+                elif [x, y] == robot_right:
+                    print(".|", end="")
+                elif [x, y] == robot_left:
+                    print("|R", end="")
+                elif [x, y] == robot_up:
+                    print("──", end="")
+                elif [x, y] == robot_down:
+                    print("──", end="")
+                elif y == robot_right[1] and x == robot_up[0]:
+                    print("◣ ", end="")
+                elif y == robot_left[1] and x == robot_up[0]:
+                    print(" ◢", end="")
+                elif y == robot_left[1] and x == robot_down[0]:
+                    print(" ◥", end="")
+                elif y == robot_right[1] and x == robot_down[0]:
+                    print("◤ ", end="")
+                
+                    
                 else:
-                    print(str(value) + " ", end="")
+                    print(str(value), end="")
             print("\n", end="")
 
         print("")
 
 
 if __name__ == "__main__":
-    grid = make_grid((7, 7))
+
+    # Esto crea un escenario de ejemplo
+
+    grid = make_grid((17, 17))
 
     for value in grid[-1]:
         value.status = "occupied"
+    
+    for value in grid[0]:
+        value.status = "occupied"
+    
+    for value in grid[12][6:16]:
+        value.status = "occupied"
+    
+    for index, row in enumerate(grid):
+        row[-1].status = "occupied"
+        row[0].status = "occupied"
+        if index in range(4, 9):
+            row[8].status = "occupied"
+    
+    grid[1][1].tile_type = "start"
+    grid[1][3].tile_type = "start"
+    grid[3][1].tile_type = "start"
+    grid[3][3].tile_type = "start"
 
-    maze = Maze_game(grid, 2, initial_position=[0, 0])
-    maze.print_grid()
+    grid[-2][-2].tile_type = "hole"
+    grid[-2][-4].tile_type = "hole"
+    grid[-4][-2].tile_type = "hole"
+    grid[-4][-4].tile_type = "hole"
+     
+    # Inicializa el juego
+    maze = Maze_game(grid, 4, initial_position=[2, 2])
+
+    print("--------------------------------")
+    print('Paramoverse ingresar "up", "down", "left" o "right".')
+    print('Para salir ingresar "exit".')
+    print("Agrandar la terminal si es necesario para que entre todo el mapa!")
+    print('---------------------------------')
+    input('Ingresar cualquier caracter para continuar: ')
+
     while True:
             maze.print_grid()
             move = input("move: ")
@@ -170,10 +225,6 @@ if __name__ == "__main__":
 
     
 
-
-    
-
-        
         # Just ignore this used for lidar
 """
         for x in range(min_x, max_x):
