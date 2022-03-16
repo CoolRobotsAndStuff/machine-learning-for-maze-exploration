@@ -19,53 +19,53 @@ class Node():
         self.tile_type = tile_type if node_type == "tile" else "undefined"
         
 
-        self.node_type_conv = {"tile":0.0, "vortex":0.5, "wall":1.0} #dic for converting to num values
+        self.valid_node_type = ("tile", 
+                                "vortex",
+                                "wall") #tuple with valid values for the variables of the node
         
-        self.status_conv = {"occupied":1.0,
-                            "undefined":0.5,
-                            "not_occupied":0.0}# same dic 
-        self.tile_type_conv = {"undefined":0.0, 
-                                "normal": 0.1, 
-                                "start": 0.2, 
-                                "connection1-2": 0.3, 
-                                "connection1-3":0.4, 
-                                "connection2-3": 0.5, 
-                                "swamp": 0.6, 
-                                "hole": 0.7} #same dic
+        self.valid_status = (   "occupied",
+                                "undefined",
+                                "not_occupied") #same tuple
 
-        
-    
-    def get_representation(self) -> list: #tipo de nodo tipo de estado  tipo de casilla 
-        rep = []
-        rep.append(self.node_type_conv[self.node_type])
-        rep.append(self.status_conv[self.status])
-        rep.append(self.tile_type_conv[self.tile_type])
-        
-        return rep
+        self.tile_type_conv = ("undefined",
+                                "normal",
+                                "start",
+                                "connection1-2",
+                                "connection1-3", 
+                                "connection2-3", 
+                                "swamp", 
+                                "hole") #same tuple
 
-    def __str__(self) -> str:
+    # Returns a visual representation of the node in ASCII 
+    def get_string(self):
         if self.status == "undefined":
-            return "?"
-        if self.status == "occupied":
-            return "■"
+            return "??"
+        elif self.status == "occupied":
+            return "\033[1;34;40m██" + "\033[0m"
+
         elif self.node_type == "wall":
-            return "-"
+            if self.status == "not_occupied":
+                return "\033[1;37;47m██"+ "\033[0m"
+            return "--"
         elif self.node_type == "vortex": #vertice
-            return "+"
+            if self.status == "not_occupied":
+                return "\033[1;37;47m██"+ "\033[0m"
+            
+            return "<>"
         elif self.node_type == "tile":
-            return "□"
+            if self.tile_type == "start":
+                return "\033[1;32;47m██"+ "\033[0m"
+            if self.tile_type == "hole":
+                return "\033[1;30;47m██"+ "\033[0m"
+
+            return "\033[1;37;47m██"+ "\033[0m"
+
+        
+    def __str__(self) -> str:
+        return self.get_string()
 
     def __repr__(self) -> str:
-        if self.status == "undefined":
-            return "?"
-        if self.status == "occupied":
-            return "■"
-        elif self.node_type == "wall":
-            return "-"
-        elif self.node_type == "vortex":
-            return "+"
-        elif self.node_type == "tile":
-            return "□"
+        return self.get_string()
 
 
 def make_grid(dimensions) -> list:
