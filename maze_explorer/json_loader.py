@@ -2,7 +2,7 @@ import json
 import os
 from grid_maker import make_grid, Node
 script_dir = os.path.dirname(__file__)
-rel_path = "test.json"
+rel_path = "world1.json"
 abs_file_path = os.path.join(script_dir, rel_path)
 
 
@@ -51,6 +51,8 @@ def odd_tile_gen(cell=None):
         [Node("tile", "not_occupied", tile_type),   Node("wall", down_half_w),  Node("tile", "not_occupied", tile_type)]
     ]
 
+    return final_list
+
 
 
 for cell in dict["cells"].values():
@@ -95,12 +97,15 @@ for cell_key, cell_value in dict["cells"].items() :
         continue
     #print(coords)
 
-    new_dict[coords] = {}
+    if ("isWall" in cell_value and cell_value["isWall"]) or "isWall" not in cell_value:
+        new_dict[coords] = {}
 
-
+    
     if "isWall" in cell_value:
-        new_dict[coords]["node_type"] = "wall"
-        new_dict[coords]["status"] = "occupied"
+        print(cell_value["isWall"])
+        if cell_value["isWall"]:
+            new_dict[coords]["node_type"] = "wall"
+            new_dict[coords]["status"] = "occupied"
     
     elif "isTile" in cell_value:
         new_dict[coords]["node_type"] = "tile"
@@ -113,10 +118,61 @@ for cell_key, cell_value in dict["cells"].items() :
         
         else:
             new_dict[coords]["tile_type"] = "normal"
+
+new_dict[start_coords]["tile_type"] = "start"
+
+grid = []
+for y in range(dict["length"]*2+1):
+    half_y = int(y / 2)
+    half_x = int(y / 2)
+    if y % 2 == 0: #even y
+        row = [[],]
+    else:
+        row = [[], [], []]
+    for x in range(dict["width"]*2+1):
+        if y % 2 == 0: #even y
+            
+            if x % 2 == 0: # even x
+                row[0].append(Node("vortex", status="not_occupied"))
+            else: #odd x
+                if (x, y) in new_dict.keys():
+                    wall = even_wall_gen(new_dict[(x, y)])
+                    for node in wall[0]:
+                        row[0].append(node)
+                else:
+                    wall = even_wall_gen(None)
+                    for node in wall[0]:
+                        row[0].append(node)
+        else: #odd y
+            
+            if x % 2 == 0: # even x
+                if (x, y) in new_dict.keys():
+                    odd_wall = odd_wall_gen(new_dict[(x, y)])
+                else:
+                    odd_wall = odd_wall_gen(None)
+                for index, a_row in enumerate(odd_wall):
+                    row[index].append(a_row[0])
+                
+            
+            else: #odd x
+                tile_cell = new_dict[(x, y)]
+                odd_tile = odd_tile_gen(tile_cell)
+
+                for index_y, a_row in enumerate(odd_tile):
+                    for index_x in range(len(a_row)):
+                        row[index_y].append(a_row[index_x])
+
+
+    for r in row:
+        grid.append(r)
+print("GRID:")
+
+for row in grid:
+    print(row)
         
 
 
-new_dict[start_coords]["tile_type"] = "start"
+
 
 for item in new_dict.items():
     print(item)
