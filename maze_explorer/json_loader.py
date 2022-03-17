@@ -2,7 +2,7 @@ import json
 import os
 from grid_maker import make_grid, Node
 script_dir = os.path.dirname(__file__)
-rel_path = "world.json"
+rel_path = "test.json"
 abs_file_path = os.path.join(script_dir, rel_path)
 
 
@@ -88,9 +88,11 @@ start_coords = (start_tile["x"], start_tile["y"])
 
 new_dict = {}
 
-for cell_key, cell_value in dict["cells"].items():
+for cell_key, cell_value in dict["cells"].items() :
     coords = list(cell_key)
     coords = (int(coords[0]), int(coords[2]))
+    if coords[0] > dict["length"]*2  or coords[1] > dict["width"]*2:
+        continue
     #print(coords)
 
     new_dict[coords] = {}
@@ -126,3 +128,5 @@ for row in grid:
 
 for key, value in dict["cells"].items():
     pass
+
+
