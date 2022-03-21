@@ -89,6 +89,7 @@ Cada **Nodo** posee los sigueintes datos:
 
    * **¿Qué modelo es conveniente entrenar con respecto a nuestro problema?**
    * **¿Qué librerias son recomendables?**
+   * **¿La estructura de memoria que estamos utilizando es la mejor para este tipo de problema o sería mejor utilizar un grafo, por ejemplo?**
 
 ## Como reproducir pruebas y entorno
 
