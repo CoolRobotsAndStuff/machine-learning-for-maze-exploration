@@ -25,7 +25,13 @@ Nuestra versión simplificada en un mundo de ejemplo:
 <img src="./images/version_simple.png" alt="drawing" width="400">
 </div>
 
-Realizamos algunos experimentos simples con machine learning para otros problemas utilizando AI gym y Stable Baselines 3, pero estamos desorientados en como atacar este problema en específico. Hay mas detalles sobre nuestras dudas en la sección de preguntas.
+Si querés ver como es el simulador, acá hay un link a la documentación de la competencia: https://erebus.rcj.cloud/docs/
+
+Realizamos algunos experimentos simples con machine learning para el problema de cart-pole balancing utilizando AI gym y Stable Baselines 3:
+
+https://github.com/CoolRobotsAndStuff/ai_pendulum_balancing_robot
+
+Pero estamos desorientados en como atacar este problema en específico. Hay mas detalles sobre nuestras dudas en la sección de preguntas.
 
 ## El laberinto
 
@@ -129,6 +135,10 @@ correr entorno
 #desde la shell del venv
 python3 game.py
 ```
+
+## Extras
+
+El código que hicimos para la competencia pasada: https://github.com/iita-robotica/rescate_laberinto/tree/ale/roboliga_2021/Competencias/Roboliga_2021/FinalCode
    
 ## Recursos Utiles (para nosotros)
    
