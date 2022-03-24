@@ -29,6 +29,8 @@ Realizamos algunos experimentos simples con machine learning para otros problema
 
 ## El laberinto
 
+Esta es una explicación de nuestro entorno a alto nivel.
+
 Para representar el laberinto utilizamos una serie de nodos organizados en una array bidimensional. Cada nodo puede representar una casilla, una pared o un vértice, como se muestra a continuación:
 
 *Dada una grilla:*
