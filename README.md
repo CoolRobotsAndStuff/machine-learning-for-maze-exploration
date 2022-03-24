@@ -20,12 +20,12 @@ https://www.youtube.com/watch?v=C_sho03AJmo
    
 Contamos con una **version simplificada** del problema en python para evitar utilizar el simulador de webots para entrenar modelos y realizar pruevas, **pero es nuestro objetivo final trasladarlo a ese simulador.**
    
-Seguimos avanzando en el aprendizaje teórico y práctico de posibles modelos acordes a la problemática, para evaluar su desempeño y luego implementar los óptimos.
-
 Nuestra versión simplificada en un mundo de ejemplo:
 <div align="center">
 <img src="./images/version_simple.png" alt="drawing" width="400">
 </div>
+
+Realizamos algunos experimentos simples con machine learning para otros problemas utilizando AI gym y Stable Baselines 3, pero estamos desorientados en como atacar este problema en específico. Hay mas detalles sobre nuestras dudas en la sección de preguntas.
 
 ## El laberinto
 
@@ -86,9 +86,10 @@ Cada **Nodo** posee los sigueintes datos:
 ![Ejemplo](./images/laberinto.png)
    
 ## Dudas y Preguntas
+   * **¿Qué librerias nos recomendarias para este tipo de problema?** Incursionamos con Stable Baselines 3, pero nuestra investigación nos lleva a pensar que TensorFlow podría ser lo mas apropiado ¿Es así?¿Deberíamos seguir usando AI gym?
 
-   * **¿Qué modelo es conveniente entrenar con respecto a nuestro problema?**
-   * **¿Qué librerias son recomendables?**
+   * **¿Qué modelo es conveniente entrenar con respecto a nuestro problema?** Hemos investigado un poco sobre deep Q learning, pero no estamos seguros.
+   
    * **¿La estructura de memoria que estamos utilizando es la mejor para este tipo de problema o sería mejor utilizar un grafo, por ejemplo?**
 
 ## Como reproducir pruebas y entorno
