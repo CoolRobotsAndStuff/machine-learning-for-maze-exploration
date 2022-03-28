@@ -23,6 +23,8 @@ def simplify_tile(cell_value):
         dict["tile_type"] = "swamp"
     elif "checkpoint" in cell_value["tile"]:
         dict["tile_type"] = "checkpoint"
+    elif "black" in cell_value["tile"]:
+        dict["tile_type"] = "hole"
     elif "color" in cell_value["tile"]:
         if cell_value["tile"]["color"] == "#4d1a99":
             dict["tile_type"] = "connection1-3"
