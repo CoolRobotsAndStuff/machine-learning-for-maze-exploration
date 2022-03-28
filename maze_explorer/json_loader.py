@@ -2,13 +2,89 @@ import json
 import os
 from grid_maker import Node
 script_dir = os.path.dirname(__file__)
-rel_path = "world1.json"
+rel_path = "curved_test.json"
 abs_file_path = os.path.join(script_dir, rel_path)
 
 
 with open(abs_file_path) as file:
     dict = json.load(file)
 
+
+
+def simplify_wall(cell_value):
+    return {"node_type": "wall", "wall_status": cell_value["halfWall"]}
+
+def simplify_tile(cell_value):
+    dict = {}
+    dict["node_type"] = "tile"
+    dict["curved_walls"] = cell_value["tile"]["curve"]
+    dict["in_half_walls"] = cell_value["tile"]["halfWallIn"]
+    if "swamp" in cell_value["tile"]:
+        dict["tile_type"] = "swamp"
+    elif "checkpoint" in cell_value["tile"]:
+        dict["tile_type"] = "checkpoint"
+    elif "color" in cell_value["tile"]:
+        if cell_value["tile"]["color"] == "#4d1a99":
+            dict["tile_type"] = "connection1-3"
+        elif cell_value["tile"]["color"] ==   "#1a1ae6":
+            dict["tile_type"] = "connection1-2"
+        elif cell_value["tile"]["color"] == "#e61a1a":
+            dict["tile_type"] = "connection2-3"
+
+    else:
+        dict["tile_type"] = "normal"
+    
+    return dict
+
+
+def format_dict(dict):
+    adjacents = ([0, 1], [1, 0], [0, -1], [-1, 0])
+
+    start_tile = dict["startTile"]
+    start_coords = (start_tile["x"], start_tile["y"])
+
+    new_dict = {}
+
+    for cell_key, cell_value in dict["cells"].items():
+        coords = cell_key.split(",")
+        coords = list(coords[0:2])
+        coords = (int(coords[0]), int(coords[1]))
+
+        lenght = dict["length"]
+        width = dict["width"]
+
+        if coords[1] > lenght * 2 or coords[0] > width * 2:
+            continue
+        if "isWall" in cell_value and not cell_value["isWall"] and cell_value["halfWall"] == 0:
+            continue
+
+        new_dict[coords] = {}
+
+        if "isWall" in cell_value:
+            new_dict[coords] = simplify_wall(cell_value)
+        
+        elif "isTile" in cell_value:
+            new_dict[coords] = simplify_tile(cell_value)
+    new_dict[start_coords]["tile_type"] = "start"
+
+    for y in range(lenght * 2 + 1):
+        for x in range(width * 2 + 1):
+            if is_even(y) and is_even(x):
+                for adj in adjacents:
+                    vortex_adj = (x + adj[0], y + adj[1])
+                    if vortex_adj in new_dict:
+                        if new_dict[vortex_adj]["node_type"] == "wall" and new_dict[vortex_adj]["wall_status"] == 0:
+                            new_dict[(x, y)] = {"node_type":"vortex", "status":"occupied"}
+
+    return new_dict
+
+class Prev_Node(Node):
+    def __init__(self, node_type: str, status: str = "undefined", tile_type: str = "undefined", curved=0):
+        super().__init__(node_type, status, tile_type)
+        self.curved = curved
+
+def is_even(n):
+    return n % 2 == 0
 
 def even_wall_gen(cell=None):
     if cell is not None:
@@ -64,104 +140,17 @@ def odd_tile_gen(cell=None):
     walls.append(bool_to_status(cell["in_half_walls"][2]))
     walls.append(bool_to_status(cell["in_half_walls"][3]))
     
-    
     vortex = get_vortex_status(cell)
-    
+    curved = cell["curved_walls"]
 
     tile_type = cell["tile_type"]
     final_list = [
-        [Node("tile", "not_occupied", tile_type), Node("wall", walls[0]), Node("tile", "not_occupied", tile_type)],
+        [Prev_Node("tile", "not_occupied", tile_type, curved[0]), Node("wall", walls[0]), Prev_Node("tile", "not_occupied", tile_type, curved[1])],
         [Node("wall", walls[3]), Node("vortex", vortex), Node("wall", walls[1])],
-        [Node("tile", "not_occupied", tile_type), Node("wall", walls[2]), Node("tile", "not_occupied", tile_type)]
+        [Prev_Node("tile", "not_occupied", tile_type, curved[2]), Node("wall", walls[2]), Prev_Node("tile", "not_occupied", tile_type, curved[3])]
     ]
 
     return final_list
-
-def simplify_wall(cell_value):
-    return {"node_type": "wall", "wall_status": cell_value["halfWall"]}
-
-def simplify_tile(cell_value):
-    dict = {}
-    dict["node_type"] = "tile"
-    dict["curved_walls"] = cell_value["tile"]["curve"]
-    dict["in_half_walls"] = cell_value["tile"]["halfWallIn"]
-    if "swamp" in cell_value["tile"]:
-        dict["tile_type"] = "swamp"
-    elif "checkpoint" in cell_value["tile"]:
-        dict["tile_type"] = "checkpoint"
-    elif "color" in cell_value["tile"]:
-        if cell_value["tile"]["color"] == "#4d1a99":
-            dict["tile_type"] = "connection1-3"
-        elif cell_value["tile"]["color"] ==   "#1a1ae6":
-            dict["tile_type"] = "connection1-2"
-        elif cell_value["tile"]["color"] == "#e61a1a":
-            dict["tile_type"] = "connection2-3"
-
-    else:
-        dict["tile_type"] = "normal"
-    
-    return dict
-
-
-def format_dict(dict):
-    adjacents = ([0, 1], [1, 0], [0, -1], [-1, 0])
-
-    start_tile = dict["startTile"]
-    start_coords = (start_tile["x"], start_tile["y"])
-
-    new_dict = {}
-
-    for cell_key, cell_value in dict["cells"].items():
-        coords = list(cell_key)
-        coords = (int(coords[0]), int(coords[2]))
-
-        lenght = dict["length"]
-        width = dict["width"]
-
-        if coords[1] > lenght * 2 or coords[0] > width * 2:
-            continue
-        if "isWall" in cell_value and not cell_value["isWall"] and cell_value["halfWall"] == 0:
-            continue
-
-        new_dict[coords] = {}
-
-        if "isWall" in cell_value:
-            new_dict[coords] = simplify_wall(cell_value)
-        
-        elif "isTile" in cell_value:
-            new_dict[coords] = simplify_tile(cell_value)
-    new_dict[start_coords]["tile_type"] = "start"
-
-    for y in range(lenght * 2 + 1):
-        if is_even(y):
-            row = [[], ]
-        else:
-            row = [[], [], []]
-        for x in range(width * 2 + 1):
-            if is_even(y):  # even y
-                if is_even(x):  # even x
-                    for vortex_adj in [(x + adj[0], y + adj[1]) for adj in adjacents]:
-                        if vortex_adj in new_dict:
-                             if new_dict[vortex_adj]["node_type"] == "wall" and new_dict[vortex_adj]["wall_status"] == 0:
-                                    new_dict[(x, y)] = {"node_type":"vortex", "status":"occupied"}
-
-
-                else:  # odd x
-                    if (x, y) in new_dict.keys():
-                        pass
-            else:  # odd y
-                if is_even(x):  # even x
-                    if (x, y) in new_dict.keys():
-                        pass
-                    else:
-                        pass
-                else:  # odd x
-                    pass
-
-    return new_dict
-
-def is_even(n):
-    return n % 2 == 0
 
 def vortex_gen(cell):
     if cell is None:
@@ -177,6 +166,13 @@ def add_node(row, node):
 
 
 def make_grid(lenght, width, cell_dict):
+    adjacents = ([0, 1], [1, 0], [0, -1], [-1, 0])
+    curved_verticies = {
+        1:[1, -1],
+        2:[1, 1],
+        3:[-1, 1],
+        4:[-1, -1],
+    }
     grid = []
     for y in range(lenght * 2 + 1):
         if is_even(y):
@@ -184,32 +180,66 @@ def make_grid(lenght, width, cell_dict):
         else:
             row = [[], [], []]
         for x in range(width * 2 + 1):
-            if is_even(y):  # even y
-                if is_even(x):  # even x
-                    if (x, y) in cell_dict.keys():
-                        cell = cell_dict[(x, y)]
-                    else:
-                        cell = None
-                    node = vortex_gen(cell)
-                else:  # odd x
-                    if (x, y) in cell_dict.keys():
-                        cell = cell_dict[(x, y)]
-                    else:
-                        cell = None
-                    node = even_wall_gen(cell)
-            else:  # odd y
-                if is_even(x):  # even x
-                    if (x, y) in cell_dict.keys():
-                        node = odd_wall_gen(cell_dict[(x, y)])
-                    else:
-                        node = odd_wall_gen(None)
-                else:  # odd x
-                    tile_cell = cell_dict[(x, y)]
-                    node = odd_tile_gen(tile_cell)
+            if is_even(y) and is_even(x):
+                if (x, y) in cell_dict.keys():
+                    cell = cell_dict[(x, y)]
+                else:
+                    cell = None
+                node = vortex_gen(cell)
+
+            elif is_even(y) and not is_even(x):
+                if (x, y) in cell_dict.keys():
+                    cell = cell_dict[(x, y)]
+                else:
+                    cell = None
+                node = even_wall_gen(cell)
+
+            elif not is_even(y) and is_even(x):
+                if (x, y) in cell_dict.keys():
+                    node = odd_wall_gen(cell_dict[(x, y)])
+                else:
+                    node = odd_wall_gen(None)
+
+            elif not is_even(y) and not is_even(x):
+                tile_cell = cell_dict[(x, y)]
+                node = odd_tile_gen(tile_cell)
 
             row = add_node(row, node)
         for r in row:
             grid.append(r)
+            
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            if value.node_type == "tile":
+                if value.curved != 0:
+                    adj_x = x + curved_verticies[value.curved][0]
+                    adj_y = y + curved_verticies[value.curved][1]
+                    
+                    grid[y][adj_x].status = "occupied"
+                    grid[adj_y][x].status = "occupied"
+
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            if value.node_type == "vortex":
+                for adj in adjacents:
+                    adj_x = x + adj[0]
+                    adj_y = y + adj[1]
+
+                    if -1 < adj_y < len(grid) and -1 < adj_x < len(row):
+                        if grid[adj_y][adj_x].status == "occupied":
+                            value.status = "occupied"
+    
+    for y, row in enumerate(grid):
+        for x, value in enumerate(row):
+            if value.node_type == "tile":
+                if value.curved != 0:
+                    adj_x = x + curved_verticies[value.curved][0]
+                    adj_y = y + curved_verticies[value.curved][1]
+                    grid[adj_y][adj_x].status = "not_occupied"
+
+    
+                            
+
 
     return grid
 

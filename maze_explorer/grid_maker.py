@@ -50,6 +50,7 @@ class Node():
         elif self.node_type == "vortex": #vertice
             if self.status == "not_occupied":
                 return "\033[1;37;47m██"+ "\033[0m"
+                
             
             return "<>"
         elif self.node_type == "tile":
