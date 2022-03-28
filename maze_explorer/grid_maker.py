@@ -57,7 +57,7 @@ class Node():
             if self.tile_type == "start":
                 return "\033[1;32;47m██"+ "\033[0m"
             if self.tile_type == "hole":
-                return "\033[1;30;47m██"+ "\033[0m"
+                return "\033[0m  "+ "\033[0m"
             if self.tile_type == "swamp":
                 return "\033[1;33;47m██"+ "\033[0m"
             if self.tile_type == "checkpoint":
