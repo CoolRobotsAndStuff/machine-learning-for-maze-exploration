@@ -2,7 +2,7 @@ import json
 import os
 from grid_maker import Node
 script_dir = os.path.dirname(__file__)
-rel_path = "curved_test.json"
+rel_path = "test1.json"
 abs_file_path = os.path.join(script_dir, rel_path)
 
 
@@ -65,6 +65,8 @@ def format_dict(dict):
         
         elif "isTile" in cell_value:
             new_dict[coords] = simplify_tile(cell_value)
+        else:
+            del new_dict[coords]
     new_dict[start_coords]["tile_type"] = "start"
 
     for y in range(lenght * 2 + 1):
@@ -207,16 +209,6 @@ def make_grid(lenght, width, cell_dict):
             row = add_node(row, node)
         for r in row:
             grid.append(r)
-            
-    for y, row in enumerate(grid):
-        for x, value in enumerate(row):
-            if value.node_type == "tile":
-                if value.curved != 0:
-                    adj_x = x + curved_verticies[value.curved][0]
-                    adj_y = y + curved_verticies[value.curved][1]
-                    
-                    grid[y][adj_x].status = "occupied"
-                    grid[adj_y][x].status = "occupied"
 
     for y, row in enumerate(grid):
         for x, value in enumerate(row):
@@ -228,18 +220,22 @@ def make_grid(lenght, width, cell_dict):
                     if -1 < adj_y < len(grid) and -1 < adj_x < len(row):
                         if grid[adj_y][adj_x].status == "occupied":
                             value.status = "occupied"
-    
+
     for y, row in enumerate(grid):
         for x, value in enumerate(row):
             if value.node_type == "tile":
                 if value.curved != 0:
                     adj_x = x + curved_verticies[value.curved][0]
                     adj_y = y + curved_verticies[value.curved][1]
-                    grid[adj_y][adj_x].status = "not_occupied"
+                    
+                    grid[y][adj_x].status = "occupied"
+                    grid[adj_y][x].status = "occupied"
 
-    
-                            
+                    adj1_x = x + curved_verticies[value.curved][0] * -1
+                    adj1_y = y + curved_verticies[value.curved][1] * -1
 
+                    grid[adj_y][adj1_x].status = "occupied"
+                    grid[adj1_y][adj_x].status = "occupied"
 
     return grid
 
