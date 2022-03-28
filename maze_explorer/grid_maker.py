@@ -61,7 +61,7 @@ class Node():
             if self.tile_type == "swamp":
                 return "\033[1;33;47m██"+ "\033[0m"
             if self.tile_type == "checkpoint":
-                return "\033[1;36;47m██"+ "\033[0m"
+                return "\033[0m██"+ "\033[0m"
             if self.tile_type == "connection1-3":
                 return "\033[1;35;47m██"+ "\033[0m"
             if self.tile_type == "connection1-2":
