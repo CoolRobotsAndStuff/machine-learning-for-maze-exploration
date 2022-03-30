@@ -41,7 +41,7 @@ class Node():
         if self.status == "undefined":
             return "??"
         elif self.status == "occupied":
-            return "\033[1;34;40m██" + "\033[0m"
+            return "\033[1;30;40m██" + "\033[0m"
 
         elif self.node_type == "wall":
             if self.status == "not_occupied":
@@ -50,13 +50,24 @@ class Node():
         elif self.node_type == "vortex": #vertice
             if self.status == "not_occupied":
                 return "\033[1;37;47m██"+ "\033[0m"
+                
             
             return "<>"
         elif self.node_type == "tile":
             if self.tile_type == "start":
                 return "\033[1;32;47m██"+ "\033[0m"
             if self.tile_type == "hole":
-                return "\033[1;30;47m██"+ "\033[0m"
+                return "\033[0m  "+ "\033[0m"
+            if self.tile_type == "swamp":
+                return "\033[1;33;47m██"+ "\033[0m"
+            if self.tile_type == "checkpoint":
+                return "\033[0m██"+ "\033[0m"
+            if self.tile_type == "connection1-3":
+                return "\033[1;35;47m██"+ "\033[0m"
+            if self.tile_type == "connection1-2":
+                return "\033[1;34;47m██"+ "\033[0m"
+            if self.tile_type == "connection2-3":
+                return "\033[1;31;47m██"+ "\033[0m"
 
             return "\033[1;37;47m██"+ "\033[0m"
 
