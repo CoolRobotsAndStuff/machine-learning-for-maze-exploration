@@ -30,7 +30,7 @@ class Maze_Game():
 
         self.reacheable = self.get_reachable_nodes()
         self.explored = set()
-        self.explored.add(tuple(self.robot_position))
+        self.update_explored()
 
         self.time_to_move = 1
         self.time_to_turn = 1
@@ -47,7 +47,7 @@ class Maze_Game():
         self.updateMask()
         self.reacheable = self.get_reachable_nodes()
         self.explored = set()
-        self.explored.add(tuple(self.robot_position))
+        self.update_explored()
         self.total_time = 0
 
         return self.dicovered_grid
@@ -59,11 +59,18 @@ class Maze_Game():
         queue.append(tuple(self.robot_position))
         # Create a set to store visited nodes
         visited = set()
+
+        visited_tiles = set()
         # While queue is not empty
         while queue:
             # Dequeue a node from queue and add it to visited set
             current_node = queue.pop(0)
             visited.add(current_node)
+
+            for adj in utils.get_adjacents(current_node, include_straight=False, include_diagonals=True):
+                if adj not in visited_tiles:
+                    visited_tiles.add(adj)
+
             adjacent_nodes = []
             for key, val in self.directions.items():
                 adajcent = (current_node[0] + val[0]*2, current_node[1] + val[1]*2)
@@ -73,7 +80,7 @@ class Maze_Game():
             for node in adjacent_nodes:
                 if node not in visited and node not in queue:
                     queue.append(node)
-        return visited
+        return visited_tiles
 
 
     def create_discovered(self, grid):
@@ -172,14 +179,20 @@ class Maze_Game():
     def finished(self):
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
+        #print("left", self.reacheable - self.explored)
         return self.reacheable == self.explored
+    
+    def update_explored(self):
+        for adj in utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True):
+            if adj not in self.explored:
+                self.explored.add(adj)
 
     # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
     def step(self, movement):
         valid_movement, time_taken = self.move(movement)
         self.updateMask()
         self.total_time += time_taken
-        self.explored.add(tuple(self.robot_position))
+        self.update_explored()
         return valid_movement, self.dicovered_grid, self.total_time
 
     def print_status(self):
@@ -257,7 +270,7 @@ if __name__ == "__main__":
 
     """
     script_dir = os.path.dirname(__file__)
-    rel_path = "test1.json"
+    rel_path = "3by3.json"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
