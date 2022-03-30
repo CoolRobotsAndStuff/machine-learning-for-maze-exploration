@@ -25,7 +25,7 @@ class Maze_Game():
     
     # Checks if a node is the start vortex
     def is_start_node(self, position):
-        if self.entire_grid[position[0]][position[1]].node_type == "vortex":
+        if self.entire_grid[position[1]][position[0]].node_type == "vortex":
             start_count = 0
             for adj in utils.get_adjacents(position, include_straight=False, include_diagonals=True):
                 if self.is_in_bounds(adj):
@@ -242,7 +242,7 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "3by3.json"
+    rel_path = "test1.json"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
