@@ -92,7 +92,7 @@ class Maze_Environment(Maze_Game, gym.Env):
 
 def main():
     script_dir = os.path.dirname(__file__)
-    rel_path = "3by3.json"
+    rel_path = "test1.json"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
@@ -101,11 +101,11 @@ def main():
     env.reset()
 
 
-    for _ in range(10):
+    for _ in range(10000):
         state, reward, done, _ = env.step(env.action_space.sample()) # take a random action
         env.render()
         if done:
-            print("Finished")
+            print("Explored the entire maze!")
             break
     
 if __name__ == '__main__':
