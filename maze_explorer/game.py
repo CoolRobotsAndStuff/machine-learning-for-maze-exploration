@@ -2,13 +2,17 @@ import numpy as np
 import numpy.ma as ma
 import copy
 from grid_maker import Node, make_grid
+import json_loader
+import os
+import utils
+
 """"
 @grid: la grilla 
 @detection_distance: distancia a la que detecta cosas
 @initial_position: donde empieza el robot
 @initial_orientation: donde empieza mirando 
 """
-class Maze_game():
+class Maze_Game():
     def __init__(self, grid:list, detection_distance:int, initial_position:list=[0,0], initial_orientation:str="up"):
 
         self.entire_grid = copy.deepcopy(grid)  # El mundo
@@ -24,10 +28,53 @@ class Maze_game():
         self.robot_position = initial_position
         self.robot_orientation = initial_orientation
 
+        self.reacheable = self.get_reachable_nodes()
+        self.explored = set()
+        self.explored.add(tuple(self.robot_position))
+
         self.time_to_move = 1
         self.time_to_turn = 1
 
+        self.total_time = 0
+
         self.updateMask()
+    
+    def reset_game(self, grid:list, initial_position:list=[0,0], initial_orientation:str="up"):
+        self.entire_grid = copy.deepcopy(grid)
+        self.dicovered_grid = self.create_discovered(self.entire_grid)
+        self.robot_position = initial_position
+        self.robot_orientation = initial_orientation
+        self.updateMask()
+        self.reacheable = self.get_reachable_nodes()
+        self.explored = set()
+        self.explored.add(tuple(self.robot_position))
+        self.total_time = 0
+
+        return self.dicovered_grid
+    
+    def get_reachable_nodes(self):
+        # Create a queue to store nodes
+        queue = []
+        # Add the starting node
+        queue.append(tuple(self.robot_position))
+        # Create a set to store visited nodes
+        visited = set()
+        # While queue is not empty
+        while queue:
+            # Dequeue a node from queue and add it to visited set
+            current_node = queue.pop(0)
+            visited.add(current_node)
+            adjacent_nodes = []
+            for key, val in self.directions.items():
+                adajcent = (current_node[0] + val[0]*2, current_node[1] + val[1]*2)
+                if self.is_valid_move(key) and self.is_valid_position(adajcent):
+                    adjacent_nodes.append(adajcent)
+            # If any adjacent node is not visited, enqueue it
+            for node in adjacent_nodes:
+                if node not in visited and node not in queue:
+                    queue.append(node)
+        return visited
+
 
     def create_discovered(self, grid):
         disc_grid = []
@@ -41,17 +88,6 @@ class Maze_game():
             disc_grid.append(copy.deepcopy(disc_row))
         return disc_grid
             
-    
-    # Pre-processes the given grid
-    def convert_grid(self, raw_grid): #Convert nodes to numbers
-        final_list = []
-        for column in raw_grid:
-            f_col = []
-            for value in column:
-                f_col.append(value.get_representation())
-            final_list.append(f_col)
-
-        return np.array(final_list)
 
     # Returns number of 90 deg turns to face in new orientation
     def get_change_in_orientation(self, initial_or, new_or):
@@ -79,20 +115,21 @@ class Maze_game():
                 self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
                 self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type
 
+    def is_valid_move(self, move:str):
+        if move not in self.directions.keys():
+            return False
+        new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
+        middle_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
+        if self.is_valid_position(new_pos) and self.is_valid_position(middle_pos):
+            return True
+        else:
+            return False
 
     # Executes a movement
     def move(self, move:str):
-        if move not in self.directions.keys():
-            return False, 0 # no logro moverse, tardo 0ut
-
-        # Calculate the new position
-        new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
-        #calcula la posicion por la que paso para llegar a new_pos
-        middle_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
-
-        # Check if the new position is valid
-        if self.is_valid_position(new_pos) and self.is_valid_position(middle_pos):
-
+        if self.is_valid_move(move):
+            new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
+        
             # Change the robot position
             self.robot_position = new_pos
 
@@ -108,27 +145,42 @@ class Maze_game():
         else:
             return False, 0
     
-    # Is a position valid?
-    def is_valid_position(self, position):
+    def is_in_bounds(self, position):
         is_valid = True
-
         # Is the position in bounds of the grid
         for pos, shape in zip(position, self.grid_shape[0:2]):
             if pos < 0 or pos > shape -1:
                 is_valid = False
+        return is_valid
+    
+    # Is a position valid?
+    def is_valid_position(self, position):
+        is_valid = self.is_in_bounds(position)
 
         # Is the position not occupied
         if is_valid:
             is_valid = self.entire_grid[position[0]][position[1]].status != "occupied"
+        
+        if self.entire_grid[position[0]][position[1]].node_type == "vortex":
+            for adjacent in utils.get_adjacents(position):
+                if self.is_in_bounds(adjacent):
+                    if self.entire_grid[adjacent[0]][adjacent[1]].status == "occupied":
+                        is_valid = False
 
         return is_valid
+    
+    def finished(self):
+        #print("reacheable", self.reacheable)
+        #print("explored", self.explored)
+        return self.reacheable == self.explored
 
     # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
     def step(self, movement):
         valid_movement, time_taken = self.move(movement)
         self.updateMask()
-        return valid_movement, self.dicovered_grid, time_taken
-        
+        self.total_time += time_taken
+        self.explored.add(tuple(self.robot_position))
+        return valid_movement, self.dicovered_grid, self.total_time
 
     def print_status(self):
         print("robot_postion =", self.robot_position)
@@ -173,6 +225,7 @@ class Maze_game():
 
 if __name__ == "__main__":
 
+    """
     # Esto crea un escenario de ejemplo
 
     grid = make_grid((17, 17))
@@ -201,9 +254,16 @@ if __name__ == "__main__":
     grid[-2][-4].tile_type = "hole"
     grid[-4][-2].tile_type = "hole"
     grid[-4][-4].tile_type = "hole"
+
+    """
+    script_dir = os.path.dirname(__file__)
+    rel_path = "test1.json"
+    abs_file_path = os.path.join(script_dir, rel_path)
+
+    grid = json_loader.grid_from_json(abs_file_path)
      
     # Inicializa el juego
-    maze = Maze_game(grid, 4, initial_position=[2, 2])
+    maze = Maze_Game(grid, 4, initial_position=[2, 2])
 
     print("--------------------------------")
     print('Paramoverse ingresar "up", "down", "left" o "right".')
