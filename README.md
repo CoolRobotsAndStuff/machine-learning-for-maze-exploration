@@ -21,14 +21,14 @@ Contamos con una **version simplificada** del problema en python para evitar uti
    
 Nuestra versión simplificada en un mundo de ejemplo:
 <div align="center">
-<img src="./images/version_simple.png" alt="drawing" width="400">
+<img src="./images/example_world.png" alt="drawing" width="400">
 </div>
 
 Si querés ver como es el simulador, acá hay un link a la documentación de la competencia: https://erebus.rcj.cloud/docs/
 
 Para la competencia contamos con un customizador de mapas que proveen los organizadores, es decir una manera de crear laberintos. Contamos con un parser para transformar el json que nos devuelve a nuestra versión simplificada.
 
-Creador de laberintos:
+Creador de laberintos: https://osaka.rcj.cloud/service/editor/simulation/2021
 
 Implementamos un environment de openAI gym y lo intergamos con la versión simplificada.
 
