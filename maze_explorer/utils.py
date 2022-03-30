@@ -1,3 +1,4 @@
+# Returns the adjacnets of a position
 def get_adjacents(position, include_straight = True, include_diagonals=False):
     straight = [[0, 1], [0, -1], [1, 0], [-1, 0]]
     diagonals = [[1, 1], [-1, 1], [1, -1], [-1, -1]]
