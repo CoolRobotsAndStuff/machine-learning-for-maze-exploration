@@ -68,7 +68,9 @@ class Maze_Environment(Maze_Game, gym.Env):
         state = grid_to_one_hot(discovered_grid)
 
         if self.finished():
-            reward = 0,9 ** actual_time
+            # TODO take map size into account when calculating reward
+            # TODO take distance to start into account when calculating reward
+            reward = 1  * (0.009 ** actual_time)
         elif not valid_movement:
             reward = -1
         else:
@@ -76,8 +78,11 @@ class Maze_Environment(Maze_Game, gym.Env):
 
         done = self.finished()
 
+        # TODO take map size into account when calculating reward
+        ther_reward = 1  * (0.009 ** actual_time)
+
         print("actual time:", actual_time)
-        print("Theoretical reward: {}".format(0.9 ** actual_time))
+        print("Theoretical reward: {}".format(ther_reward))
 
         return state, reward, done, None
     
@@ -91,17 +96,18 @@ class Maze_Environment(Maze_Game, gym.Env):
 
 def main():
     script_dir = os.path.dirname(__file__)
-    rel_path = "test1.json"
+    rel_path = "3by3.json"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
     # Initialize the environment
     env = Maze_Environment(grid, 4, [2, 2], "up")
     env.reset(grid, [2, 2], "up")
-    for _ in range(10000):
+    for _ in range(10):
         state, reward, done, _ = env.step(env.action_space.sample()) # take a random action
         env.render()
         if done:
+            print("Finished")
             break
     
 
