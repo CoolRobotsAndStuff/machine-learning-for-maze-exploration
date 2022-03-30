@@ -8,13 +8,12 @@
 
 Estamos participando en la competencia de rescate simulado de la RoboCup, utilizando el simulador de  Webots . En esta categoría el robot debe recorrer un laberinto, buscando víctimas y reportando su posición. A raíz de esta consigna, surge el problema de cómo recorrerlo en el menor tiempo posible, para el cual pensamos en aplicar machine learning.
 
-## Problema:
-
-**Dado un laberinto el robot debe recorrerlo en su *totalidad*, de la manera mas eficiente posible, solo conociendo las partes que ya exploró, descubriendolo gradualmente.**
-
 Video de ejemplo de una ronda de la competencia, utilizando el simulador:
 https://www.youtube.com/watch?v=C_sho03AJmo
 
+## Problema:
+
+**Dado un laberinto el robot debe recorrerlo en su *totalidad*, de la manera mas eficiente posible, solo conociendo las partes que ya exploró, descubriendolo gradualmente.**
    
 ## Avances
    
@@ -26,6 +25,12 @@ Nuestra versión simplificada en un mundo de ejemplo:
 </div>
 
 Si querés ver como es el simulador, acá hay un link a la documentación de la competencia: https://erebus.rcj.cloud/docs/
+
+Para la competencia contamos con un customizador de mapas que proveen los organizadores, es decir una manera de crear laberintos. Contamos con un parser para transformar el json que nos devuelve a nuestra versión simplificada.
+
+Creador de laberintos:
+
+Implementamos un environment de openAI gym y lo intergamos con la versión simplificada.
 
 Realizamos algunos experimentos simples con machine learning para el problema de cart-pole balancing utilizando AI gym y Stable Baselines 3:
 
@@ -92,6 +97,14 @@ Cada **Nodo** posee los sigueintes datos:
 ### Ejemplo
 
 ![Ejemplo](./images/laberinto.png)
+
+### Environment de AI gym
+
+Nuestro espacio de observación es la grilla en sí. La estamos encodeando con one-hot encoding. 
+
+Nuestro espacio de acción es discreto con cuatro movimientos: "up", "down", "left", "right"
+
+Si trata de moverse a una posición inválida le damos un reward de -1. El reward positivo se lo damos unicamente al terminar la partida, y es inversamente proporcional al tiempo que tardó en explorar el laberinto.
    
 ## Dudas y Preguntas
    * **¿Qué librerias nos recomendarias para este tipo de problema?** Incursionamos con Stable Baselines 3, pero nuestra investigación nos lleva a pensar que TensorFlow podría ser lo mas apropiado ¿Es así?¿Deberíamos seguir usando AI gym?
@@ -130,11 +143,17 @@ instalar dependencias
 pipenv install
 ```
 
-correr entorno
+Para correr la versíon simplificada manualmente:
 ```
 #desde la shell del venv
-python3 game.py
+python3 maze_explorer/game.py
 ```
+Para correr el environment de gym con un agente aleatorio:
+```
+#desde la shell del venv
+python3 maze_explorer/environment.py
+```
+
 
 ## Extras
 
