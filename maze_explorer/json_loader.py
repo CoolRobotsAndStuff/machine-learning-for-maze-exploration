@@ -6,11 +6,6 @@ rel_path = "test1.json"
 abs_file_path = os.path.join(script_dir, rel_path)
 
 
-with open(abs_file_path) as file:
-    dict = json.load(file)
-
-
-
 def simplify_wall(cell_value):
     return {"node_type": "wall", "wall_status": cell_value["halfWall"]}
 
@@ -241,16 +236,24 @@ def make_grid(lenght, width, cell_dict):
 
     return grid
 
-formatted_dict = format_dict(dict)
-print("FORMAT DICT")
-for item in formatted_dict.items():
-    print(item)
-grid = make_grid(dict["length"], dict["width"], cell_dict=formatted_dict)
-        
-for item in formatted_dict.items():
-    print(item)
+def grid_from_json(json_path):
+    with open(json_path) as file:
+        dict = json.load(file)
 
-for row in grid:
-    for val in row:
-        print(val, end="")
-    print()
+    formatted_dict = format_dict(dict)
+    #print("FORMAT DICT")
+    for item in formatted_dict.items():
+        print(item)
+    grid = make_grid(dict["length"], dict["width"], cell_dict=formatted_dict)
+            
+    for item in formatted_dict.items():
+        print(item)
+
+    for row in grid:
+        for val in row:
+            print(val, end="")
+        print()
+    return grid
+
+if __name__ == "__main__":
+    grid_from_json(abs_file_path)
