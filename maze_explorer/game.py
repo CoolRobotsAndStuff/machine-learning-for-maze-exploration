@@ -271,15 +271,19 @@ if __name__ == "__main__":
     print("Agrandar la terminal si es necesario para que entre todo el mapa!")
     print('---------------------------------')
     input('Ingresar cualquier caracter para continuar: ')
-
+    maze.print_grid()
     while True:
-            maze.print_grid()
+            
             move = input("move: ")
             if move == "exit": break
             valid_move, _, time_taken = maze.step(move)
             if not valid_move:
                 print("invalid movement!")
             print("Time taken:", time_taken)
+            maze.print_grid()
+            if maze.finished():
+                print("Finished!")
+                break
 
 
 
