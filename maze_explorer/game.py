@@ -188,9 +188,15 @@ class Maze_Game():
     
     # Updates the part of the map the robot can see depending on its position
     def update_explored(self):
+
         for adj in utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True):
             if adj not in self.explored:
                 self.explored.add(adj)
+        
+        for adj in utils.get_adjacents(self.robot_position, include_straight=True, include_diagonals=True):
+            self.entire_grid[adj[0]][adj[1]].explored = True
+        
+        self.entire_grid[self.robot_position[0]][self.robot_position[1]].explored = True
 
     # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
     def step(self, movement):
@@ -198,6 +204,13 @@ class Maze_Game():
         self.updateMask()
         self.total_time += time_taken
         self.update_explored()
+        for y, row in enumerate(self.entire_grid):
+            for x, node in enumerate(row):
+                if [x, y] == self.robot_position:
+                    node.is_robots_position = True
+                else:
+                    node.is_robots_position = False
+                
         return valid_movement, self.dicovered_grid, self.total_time
 
     def print_status(self):

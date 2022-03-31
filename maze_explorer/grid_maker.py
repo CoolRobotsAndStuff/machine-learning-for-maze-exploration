@@ -13,10 +13,12 @@ undefined = no conozco el tipo de casilla
 """
 
 class Node():
-    def __init__(self, node_type:string, status:string="undefined", tile_type:string="undefined"):
+    def __init__(self, node_type:string, status:string="undefined", tile_type:string="undefined", curved:int=0, explored:bool=False, is_robots_position:bool=False):
         self.node_type = node_type
         self.status = status
         self.tile_type = tile_type if node_type == "tile" else "undefined"
+        self.explored = explored
+        self.is_robots_position = is_robots_position
         
 
         self.valid_node_type = ("tile", 
