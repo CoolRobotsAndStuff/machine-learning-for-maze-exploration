@@ -15,10 +15,10 @@ def main():
     check_env(env)
 
     # Train
-    model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
+    model = PPO('MlpPolicy', env, n_steps=500, verbose=1)
 
     
-    model.learn(total_timesteps= 1000* 100000)
+    model.learn(total_timesteps= 500* 1000)
 
     model.save("my_model")
 
