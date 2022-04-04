@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 numpy = "==1.22.2"
+stable-baselines = ">=3.6.0"
 
 [dev-packages]
 
