@@ -81,7 +81,7 @@ class Maze_Environment(Maze_Game, gym.Env):
         else:
             reward = 0
 
-        done = self.finished()
+        done = False #self.finished()
 
         #print("actual time:", actual_time)
         #print("Theoretical reward: {}".format(ther_reward))
