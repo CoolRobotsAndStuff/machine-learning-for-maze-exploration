@@ -15,10 +15,10 @@ def main():
     check_env(env)
 
     # Train
-    model = PPO('MlpPolicy', env, n_steps=500, verbose=1)
+    model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
 
     
-    model.learn(total_timesteps= 500* 1000)
+    model.learn(total_timesteps= 1000* 1000)
 
     model.save("my_model")
 
@@ -26,8 +26,9 @@ def main():
     for _ in range(1000):
         action, _states = model.predict(obs)
         obs, reward, done, info = env.step(action)
-        print(obs, reward, done, info)
-        if done:
+        env.render()
+        print(reward, done, info)
+        if env.done_1:
             print("DID IT")
             break
     
@@ -39,6 +40,5 @@ def main():
             print("Explored the entire maze!")
             break
     """
-    
 if __name__ == '__main__':
     main()
