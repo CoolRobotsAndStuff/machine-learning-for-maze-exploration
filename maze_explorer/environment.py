@@ -66,6 +66,7 @@ class Maze_Environment(Maze_Game, gym.Env):
             2: "left",
             3: "right"
         }
+        self.done_1 = False
 
     def step(self, action):
         valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
@@ -74,12 +75,14 @@ class Maze_Environment(Maze_Game, gym.Env):
         # TODO take map size into account when calculating reward
         # TODO take distance to start into account when calculating reward
         ther_reward = 1  * (0.999 ** actual_time)
-        if self.finished():
+        if self.finished() and not self.done_1:
             reward = ther_reward
         elif not valid_movement:
             reward = -1
         else:
             reward = 0
+        
+        self.done_1 = self.finished()
 
         done = False #self.finished()
 
