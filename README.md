@@ -115,52 +115,58 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
 
 ## Como reproducir pruebas y entorno
 
-Instalar python 3.8.10 y pip:
+   Instalar python 3.8.10 y pip:
 
-Windows:
+   Windows:
 
-https://www.python.org/downloads/release/python-3810/
-   
-Ubuntu:
+   https://www.python.org/downloads/release/python-3810/
 
-```
-sudo add-apt-repository ppa:deadsnakes/ppa
-sudo apt-get update
-sudo apt-get install python3.8
-```
-   
-O compliar desde fuente:
-   
-```
-sudo apt update
-sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
-wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz
-tar -xf Python-3.8.10.tgz
-cd Python-3.8.10
-./configure --enable-optimizations
-make
-sudo make install
-```
+   Ubuntu:
 
-Clonar repositorio
+   ```
+   sudo apt update
+   ```
+   ```
+   sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+   ```
+   ```
+   cd /opt
+   ```
+   ```
+   sudo wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz
+   ```
+   ```
+   sudo tar -xf Python-3.8.10.tgz
+   ```
+   ```
+   cd Python-3.8.10
+   ```
+   ```
+   sudo ./configure --enable-optimizations
+   ```
+   ```
+   sudo make install
+   ```
 
-```
-git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
-```
-instalar dependencias
+   Clonar repositorio
 
-```
-pip install gym numpy stable-baselines3
-```
+   ```
+   git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
+   ```
+   instalar dependencias
 
-Para correr la versíon simplificada manualmente:
-```
-python3 maze_explorer/game.py
-```
-Para correr el environment de gym con un agente aleatorio:
-```
-python3 maze_explorer/environment.py
-```
+   ```
+   pip install gym numpy stable-baselines3
+   ```
+
+   Para correr la versíon simplificada manualmente:
+   ```
+   python3 maze_explorer/game.py
+   ```
+   Para correr el environment de gym con un agente aleatorio:
+   ```
+   python3 maze_explorer/environment.py
+   ```
 
 
 ## Extras
