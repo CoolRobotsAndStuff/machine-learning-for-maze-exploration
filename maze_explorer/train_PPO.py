@@ -6,7 +6,9 @@ import os
 
 def main():
     script_dir = os.path.dirname(__file__)
+
     rel_path = "test1.json"
+
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
@@ -18,7 +20,11 @@ def main():
     model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
 
     
+<<<<<<< HEAD
     model.learn(total_timesteps= 1000* 10000)
+=======
+    model.learn(total_timesteps= 1000* 1000)
+>>>>>>> bd4af58ea8af01a7de85066eac1f47b6f576cb5d
 
     model.save("my_model")
 
