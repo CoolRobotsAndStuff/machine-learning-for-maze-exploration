@@ -46,7 +46,7 @@ def grid_to_one_hot(grid):
         for node in row:
             one_hot_row.append(get_one_hot_form_node(node))
         one_hot_grid.append(one_hot_row)
-    return np.array(one_hot_grid)
+    return np.array(one_hot_grid, dtype=np.float32)
 
 class Maze_Environment(Maze_Game, gym.Env):
     def __init__(self, grid: list, detection_distance: int, initial_orientation: str = "up"):
