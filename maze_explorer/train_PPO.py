@@ -6,7 +6,7 @@ import os
 
 def main():
     script_dir = os.path.dirname(__file__)
-    rel_path = "3by3.json"
+    rel_path = "test1.json"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid = json_loader.grid_from_json(abs_file_path)
@@ -15,9 +15,7 @@ def main():
     check_env(env)
 
     # Train
-    #model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
-
-    model = PPO.load("my_model", env=env)
+    model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
 
     
     model.learn(total_timesteps= 1000* 10000)
