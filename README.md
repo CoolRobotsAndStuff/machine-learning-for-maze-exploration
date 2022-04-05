@@ -115,7 +115,7 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
 
 ## Como reproducir pruebas y entorno
 
-Instalar python 3.8.10 y pip:
+Instalar python 3.8.10 o superior y pip:
 
 https://www.python.org/downloads/release/python-3810/
 
