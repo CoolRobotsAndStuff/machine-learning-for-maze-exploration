@@ -1,14 +1,12 @@
 import json
 import os
 from grid_maker import Node
-script_dir = os.path.dirname(__file__)
-rel_path = "test1.json"
-abs_file_path = os.path.join(script_dir, rel_path)
 
-
+# Extracts the necesary information about the wall form a cell in the dicitonary
 def simplify_wall(cell_value):
     return {"node_type": "wall", "wall_status": cell_value["halfWall"]}
 
+# Extracts the necesary information about the tile form a cell in the dicitonary
 def simplify_tile(cell_value):
     dict = {}
     dict["node_type"] = "tile"
@@ -33,7 +31,7 @@ def simplify_tile(cell_value):
     
     return dict
 
-
+# Simplifies the given dictionary to a format that can be used to make a grid
 def format_dict(dict):
     adjacents = ([0, 1], [1, 0], [0, -1], [-1, 0])
 
@@ -74,9 +72,9 @@ def format_dict(dict):
                     if vortex_adj in new_dict:
                         if new_dict[vortex_adj]["node_type"] == "wall" and new_dict[vortex_adj]["wall_status"] == 0:
                             new_dict[(x, y)] = {"node_type":"vortex", "status":"occupied"}
-
     return new_dict
 
+# A previsory node to handle curved walls
 class Prev_Node(Node):
     def __init__(self, node_type: str, status: str = "undefined", tile_type: str = "undefined", curved=0):
         super().__init__(node_type, status, tile_type)
@@ -85,6 +83,7 @@ class Prev_Node(Node):
 def is_even(n):
     return n % 2 == 0
 
+# Generates a vertical wall
 def even_wall_gen(cell=None):
     if cell is not None:
         left = right = "not_occupied"
@@ -99,6 +98,7 @@ def even_wall_gen(cell=None):
         final_list = [[Node("wall", "not_occupied"), Node("vortex", "not_occupied"), Node("wall", "not_occupied")],]
     return final_list
 
+# Generates a horizontal wall
 def odd_wall_gen(cell=None):
     if cell is not None:
         up = down = "not_occupied"
@@ -120,6 +120,7 @@ def odd_wall_gen(cell=None):
             [Node("wall", "not_occupied"), ]]
     return final_list
 
+# Gets the status of the center vortex in a tile
 def get_vortex_status(cell):
     for wall in cell["in_half_walls"]:
         if wall:
@@ -132,6 +133,7 @@ def bool_to_status(bool_value):
     else:
         return "not_occupied"
 
+# Generates a tile
 def odd_tile_gen(cell=None):
     walls = []
     walls.append(bool_to_status(cell["in_half_walls"][0]))
@@ -151,19 +153,21 @@ def odd_tile_gen(cell=None):
 
     return final_list
 
+# Generates a vortex
 def vortex_gen(cell):
     if cell is None:
         return [[Node("vortex", status="not_occupied"), ], ]
     else:
         return [[Node("vortex", status=cell["status"]), ], ]
 
+# Adds a node to the grid
 def add_node(row, node):
     for index_y, a_row in enumerate(node):
         for index_x in range(len(a_row)):
             row[index_y].append(a_row[index_x])
     return row
 
-
+# Makes a grid form the formatted dicitonary
 def make_grid(lenght, width, cell_dict):
     adjacents = ([0, 1], [1, 0], [0, -1], [-1, 0])
     curved_verticies = {
@@ -172,6 +176,7 @@ def make_grid(lenght, width, cell_dict):
         3:[-1, 1],
         4:[-1, -1],
     }
+    # Creates the grid adding different types of nodes depending on the index of the cell
     grid = []
     for y in range(lenght * 2 + 1):
         if is_even(y):
@@ -207,6 +212,7 @@ def make_grid(lenght, width, cell_dict):
         for r in row:
             grid.append(r)
 
+    # Adds verticies in the middle and a the end of walls
     for y, row in enumerate(grid):
         for x, value in enumerate(row):
             if value.node_type == "vortex":
@@ -218,6 +224,7 @@ def make_grid(lenght, width, cell_dict):
                         if grid[adj_y][adj_x].status == "occupied":
                             value.status = "occupied"
 
+    # Adds curved walls
     for y, row in enumerate(grid):
         for x, value in enumerate(row):
             if value.node_type == "tile":
@@ -236,24 +243,27 @@ def make_grid(lenght, width, cell_dict):
 
     return grid
 
+# Takes a json file from the maze customizer and returns a grid
 def grid_from_json(json_path):
+    # Opens the file
     with open(json_path) as file:
         dict = json.load(file)
-
+    # Simplifies the json
     formatted_dict = format_dict(dict)
-    #print("FORMAT DICT")
-    for item in formatted_dict.items():
-        print(item)
+    # Generates the grid
     grid = make_grid(dict["length"], dict["width"], cell_dict=formatted_dict)
-            
-    for item in formatted_dict.items():
-        print(item)
 
+    return grid
+
+if __name__ == "__main__":
+    script_dir = os.path.dirname(__file__)
+    rel_path = "test1.json"
+    abs_file_path = os.path.join(script_dir, rel_path)
+
+    grid = grid_from_json(abs_file_path)
+
+    # Prints the grid
     for row in grid:
         for val in row:
             print(val, end="")
         print()
-    return grid
-
-if __name__ == "__main__":
-    grid_from_json(abs_file_path)

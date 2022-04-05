@@ -1,16 +1,11 @@
 import numpy as np
 import os
-import time
-import sys
 import gym
 from game import Maze_Game
 import json_loader
 
-from gym import error, spaces, utils
-import copy
-from gym.utils import seeding
-import matplotlib.pyplot as plt
-
+from stable_baselines3 import PPO
+from stable_baselines3.common.env_checker import check_env
 
 one_hot_node_type_encoder = {
     "tile": np.array([1, 0, 0]),
@@ -36,9 +31,14 @@ one_hot_status_encoder = {
     "not_occupied": np.array([0, 0, 1])
 }
 
+# Encodes a single node
 def get_one_hot_form_node(node):
-    return np.concatenate((one_hot_node_type_encoder[node.node_type], one_hot_status_encoder[node.status], one_hot_tile_type_encoder[node.tile_type]))
+    arr = np.concatenate((one_hot_node_type_encoder[node.node_type], one_hot_status_encoder[node.status], one_hot_tile_type_encoder[node.tile_type]))
+    arr1 = np.array([int(node.is_robots_position), int(node.explored)])
+    arr = np.concatenate((arr, arr1))
+    return arr
 
+# Encodes the entire grid and returns it as a numpy array
 def grid_to_one_hot(grid):
     one_hot_grid = list()
     for row in grid:
@@ -46,29 +46,36 @@ def grid_to_one_hot(grid):
         for node in row:
             one_hot_row.append(get_one_hot_form_node(node))
         one_hot_grid.append(one_hot_row)
-    return one_hot_grid
+    return np.array(one_hot_grid)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, grid: list, detection_distance: int, initial_position: list = ..., initial_orientation: str = "up"):
-        super().__init__(grid, detection_distance, initial_position, initial_orientation)
+    def __init__(self, grid: list, detection_distance: int, initial_orientation: str = "up"):
+        super().__init__(grid, detection_distance, initial_orientation)
+        self.grid = grid
+        self.initial_orientation = initial_orientation
 
+        # Action space
         self.action_space = gym.spaces.Discrete(4)
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 15), dtype=np.float32)
+        # Observation space
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 17), dtype=np.float32)
 
+        # Converts the output if the model to an action for the game
         self.action_to_str = {
             0: "up",
             1: "down",
             2: "left",
             3: "right"
         }
-    
 
     def step(self, action):
         valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
         state = grid_to_one_hot(discovered_grid)
 
+        # TODO take map size into account when calculating reward
+        # TODO take distance to start into account when calculating reward
+        ther_reward = 1  * (0.999 ** actual_time)
         if self.finished():
-            reward = 0,9 ** actual_time
+            reward = ther_reward
         elif not valid_movement:
             reward = -1
         else:
@@ -77,12 +84,12 @@ class Maze_Environment(Maze_Game, gym.Env):
         done = self.finished()
 
         print("actual time:", actual_time)
-        print("Theoretical reward: {}".format(0.9 ** actual_time))
+        print("Theoretical reward: {}".format(ther_reward))
 
-        return state, reward, done, None
+        return state, reward, done, {}
     
-    def reset(self, grid, initial_position, initial_orientation):
-        discovered_grid = self.reset_game(grid, initial_position, initial_orientation)
+    def reset(self):
+        discovered_grid = self.reset_game(self.grid, self.initial_orientation)
         return grid_to_one_hot(discovered_grid)
     
     def render(self):
@@ -96,16 +103,35 @@ def main():
 
     grid = json_loader.grid_from_json(abs_file_path)
     # Initialize the environment
-    env = Maze_Environment(grid, 4, [2, 2], "up")
-    env.reset(grid, [2, 2], "up")
+    env = Maze_Environment(grid, 4, "up")
+    check_env(env)
+
+    # Train
+    model = PPO('MlpPolicy', env, n_steps=100000, verbose=1)
+
+    
+    model.learn(total_timesteps= 1000* 100000)
+
+    model.save("my_model")
+
+    obs = env.reset()
+    for _ in range(1000):
+        action, _states = model.predict(obs)
+        obs, reward, done, info = env.step(action)
+        print(obs, reward, done, info)
+        if done:
+            print("DID IT")
+            break
+
+    """
     for _ in range(10000):
         state, reward, done, _ = env.step(env.action_space.sample()) # take a random action
         env.render()
         if done:
+            print("Explored the entire maze!")
             break
+    """
     
-
-
 if __name__ == '__main__':
     main()
 
