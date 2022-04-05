@@ -124,33 +124,18 @@ Clonar repositorio
 ```
 git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
 ```
-
-instalar pipenv
-
-```
-pip install pipenv
-```
-
-crear entorno virutal
-
-```
-pipenv shell   python 3.8.10
-```
-
 instalar dependencias
 
 ```
-pipenv install
+pip install gym numpy stable-baselines3
 ```
 
 Para correr la versíon simplificada manualmente:
 ```
-#desde la shell del venv
 python3 maze_explorer/game.py
 ```
 Para correr el environment de gym con un agente aleatorio:
 ```
-#desde la shell del venv
 python3 maze_explorer/environment.py
 ```
 
