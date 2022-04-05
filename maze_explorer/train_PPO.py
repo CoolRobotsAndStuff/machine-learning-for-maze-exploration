@@ -20,11 +20,7 @@ def main():
     model = PPO('MlpPolicy', env, n_steps=1000, verbose=1)
 
     
-<<<<<<< HEAD
     model.learn(total_timesteps= 1000* 10000)
-=======
-    model.learn(total_timesteps= 1000* 1000)
->>>>>>> bd4af58ea8af01a7de85066eac1f47b6f576cb5d
 
     model.save("my_model")
 
