@@ -156,16 +156,16 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
    instalar dependencias
 
    ```
-   pip install gym numpy stable-baselines3
+   python3.8 -m pip install gym numpy stable-baselines3
    ```
 
    Para correr la versíon simplificada manualmente:
    ```
-   python3 maze_explorer/game.py
+   python3.8 maze_explorer/game.py
    ```
    Para correr el environment de gym con un agente aleatorio:
    ```
-   python3 maze_explorer/environment.py
+   python3.8 maze_explorer/environment.py
    ```
 
 
