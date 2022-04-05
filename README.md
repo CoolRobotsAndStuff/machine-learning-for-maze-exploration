@@ -115,9 +115,32 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
 
 ## Como reproducir pruebas y entorno
 
-Instalar python 3.8.10 o superior y pip:
+Instalar python 3.8.10 y pip:
+
+Windows:
 
 https://www.python.org/downloads/release/python-3810/
+   
+Ubuntu:
+
+```
+sudo add-apt-repository ppa:deadsnakes/ppa
+sudo apt-get update
+sudo apt-get install python3.8
+```
+   
+O compliar desde fuente:
+   
+```
+sudo apt update
+sudo apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev
+wget https://www.python.org/ftp/python/3.8.10/Python-3.8.10.tgz
+tar -xf Python-3.8.10.tgz
+cd Python-3.8.10
+./configure --enable-optimizations
+make
+sudo make install
+```
 
 Clonar repositorio
 
