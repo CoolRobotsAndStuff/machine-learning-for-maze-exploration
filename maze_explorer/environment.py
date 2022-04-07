@@ -4,34 +4,36 @@ import gym
 from game import Maze_Game
 import json_loader
 
+MAX_INT = 1
+
 one_hot_node_type_encoder = {
-    "tile": np.array([1, 0, 0]),
-    "vortex": np.array([0, 1, 0]),
-    "wall": np.array([0, 0, 1])
+    "tile": np.array([MAX_INT, 0, 0]),
+    "vortex": np.array([0, MAX_INT, 0]),
+    "wall": np.array([0, 0, MAX_INT]),
 }
 
 one_hot_tile_type_encoder = {
-    "undefined": np.array([1, 0, 0, 0, 0, 0, 0, 0, 0]),
-    "normal": np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
-    "start": np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
-    "connection1-2": np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),
-    "connection1-3": np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
-    "connection2-3": np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),
-    "swamp": np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),
-    "hole": np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),
-    "checkpoint": np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+    "undefined": np.array([MAX_INT, 0, 0, 0, 0, 0, 0, 0, 0]),
+    "normal": np.array([0, MAX_INT, 0, 0, 0, 0, 0, 0, 0]),
+    "start": np.array([0, 0, MAX_INT, 0, 0, 0, 0, 0, 0]),
+    "connection1-2": np.array([0, 0, 0, MAX_INT, 0, 0, 0, 0, 0]),
+    "connection1-3": np.array([0, 0, 0, 0, MAX_INT, 0, 0, 0, 0]),
+    "connection2-3": np.array([0, 0, 0, 0, 0, MAX_INT, 0, 0, 0]),
+    "swamp": np.array([0, 0, 0, 0, 0, 0, MAX_INT, 0, 0]),
+    "hole": np.array([0, 0, 0, 0, 0, 0, 0, MAX_INT, 0]),
+    "checkpoint": np.array([0, 0, 0, 0, 0, 0, 0, 0, MAX_INT])
 }
 
 one_hot_status_encoder = {
-    "occupied": np.array([1, 0, 0]),
-    "undefined": np.array([0, 1, 0]),
-    "not_occupied": np.array([0, 0, 1])
+    "occupied": np.array([MAX_INT, 0, 0]),
+    "undefined": np.array([0, MAX_INT, 0]),
+    "not_occupied": np.array([0, 0, MAX_INT])
 }
 
 # Encodes a single node
 def get_one_hot_form_node(node):
     arr = np.concatenate((one_hot_node_type_encoder[node.node_type], one_hot_status_encoder[node.status], one_hot_tile_type_encoder[node.tile_type]))
-    arr1 = np.array([int(node.is_robots_position), int(node.explored)])
+    arr1 = np.array([MAX_INT if node.is_robots_position else 0, node.explored])
     arr = np.concatenate((arr, arr1))
     return arr
 
@@ -97,6 +99,7 @@ class Maze_Environment(Maze_Game, gym.Env):
 
 
 def main():
+    
     script_dir = os.path.dirname(__file__)
     rel_path = "test1.json"
     abs_file_path = os.path.join(script_dir, rel_path)
