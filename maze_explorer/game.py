@@ -17,11 +17,15 @@ class Maze_Game():
         # Distance from the center of the robot inside wich the robot will detect things
         self.detection_distance = detection_distance
         
+        self.exp_count = 0
+        
         self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
         self.time_to_move = 1
         self.time_to_turn = 1
 
         self.reset_game(grid, initial_orientation)
+
+       
     
     # Checks if a node is the start vortex
     def is_start_node(self, position):
@@ -188,15 +192,15 @@ class Maze_Game():
     
     # Updates the part of the map the robot can see depending on its position
     def update_explored(self):
-
+        self.exp_count += 1
         for adj in utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True):
             if adj not in self.explored:
                 self.explored.add(adj)
         
         for adj in utils.get_adjacents(self.robot_position, include_straight=True, include_diagonals=True):
-            self.entire_grid[adj[0]][adj[1]].explored = True
+            self.entire_grid[adj[0]][adj[1]].explored = self.exp_count / 10000
         
-        self.entire_grid[self.robot_position[0]][self.robot_position[1]].explored = True
+        self.entire_grid[self.robot_position[0]][self.robot_position[1]].explored = self.exp_count / 10000
 
     # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
     def step(self, movement):
@@ -279,6 +283,7 @@ if __name__ == "__main__":
             if not valid_move:
                 print("invalid movement!")
             print("Time in run:", time_taken)
+            #print("Explored count:", maze.exp_count / 10000)
             maze.print_grid()
 
             if maze.finished():
