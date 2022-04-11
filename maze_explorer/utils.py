@@ -9,3 +9,9 @@ def get_adjacents(position, include_straight = True, include_diagonals=False):
         adjacents += diagonals
     for adj in adjacents:
         yield (position[0] + adj[0], position[1] + adj[1])
+
+def is_even(number):
+    return number % 2 == 0
+
+def is_odd(number):
+    return number % 2 != 0
