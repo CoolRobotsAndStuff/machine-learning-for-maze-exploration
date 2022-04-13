@@ -4,8 +4,7 @@ import utils
 import numpy as np
 import copy
 
-
-
+# Returns a random psition of a vortex node in the grid
 def get_random_vortex_position(grid, include_edges=True):
     minimum = 0 if include_edges else 1
     max_x = len(grid[0]) - 1 if include_edges else len(grid[0]) - 2
@@ -16,6 +15,7 @@ def get_random_vortex_position(grid, include_edges=True):
         if grid[y][x].node_type == "vortex":
             return (x, y)
 
+# Returns a random position of a tile node in the grid
 def get_random_tile_position(grid, include_edges=True):
     minimum = 0 if include_edges else 1
     max_x = len(grid[0]) - 1 if include_edges else len(grid[0]) - 2
@@ -26,6 +26,7 @@ def get_random_tile_position(grid, include_edges=True):
         if grid[y][x].node_type == "tile":
             return (x, y)
 
+# Returns a random position of a wall node in the grid
 def get_random_wall_position(grid, include_edges=True):
     minimum = 0 if include_edges else 1
     max_x = len(grid[0]) - 1 if include_edges else len(grid[0]) - 2
@@ -35,6 +36,8 @@ def get_random_wall_position(grid, include_edges=True):
         y = random.randint(minimum, max_y)
         if grid[y][x].node_type == "wall":
             return (x, y)
+
+# Checks of there is a zero in an array
 def zero_in_array(grid):
     for row in grid:
         for node in row:
@@ -42,6 +45,7 @@ def zero_in_array(grid):
                 return True
     return False
 
+# Subdivides the grid into areas
 def get_random_areas(n_areas, grid):
     area_grid_width = (len(grid[0]) - 1) // 4
     area_grid_height = (len(grid) - 1) // 4
@@ -91,7 +95,9 @@ def get_random_areas(n_areas, grid):
         area_grid = copy.deepcopy(new_area_grid)
     return area_grid
 
+# Checks if the areas are valid
 def check_areas(areas):
+    # checks all areas have a minimum of 3 nodes
     counts = list()
     for i in range(3):
         counts.append(np.count_nonzero(areas == i+1))
@@ -99,12 +105,10 @@ def check_areas(areas):
     for count in counts:
         if 0 < count < 4:
             return False 
-
     return True
     
-
+# Generates a grid from the areas
 def generate_areas(area_grid, grid):
-    
     final_area_grid = np.zeros((len(grid), len(grid[0])), dtype=int)
 
     for y, row in enumerate(area_grid):
@@ -123,6 +127,7 @@ def generate_areas(area_grid, grid):
 
     return final_area_grid
 
+# Prints an area grid
 def print_area_grid(grid):
     node_to_pixel = {
         1: "\033[1;33;47m██"+ "\033[0m",
@@ -135,6 +140,7 @@ def print_area_grid(grid):
             print(node_to_pixel[node], end="")
         print()
 
+# Fills the perimeter of the grid
 def fill_grid_borders(shape):
     for x in range(0, shape[1]):
         grid[0][x].status = "occupied"
@@ -143,6 +149,7 @@ def fill_grid_borders(shape):
         grid[y][0].status = "occupied"
         grid[y][-1].status = "occupied"
 
+# Given the area grid, fills the grid
 def fill_area_limits(grid, area_grid):
     for y, row in enumerate(grid):
         for x, node in enumerate(row):
@@ -163,6 +170,7 @@ def fill_area_limits(grid, area_grid):
                         if value in numbers:
                             node.status = "occupied"
 
+# Prints the grid
 def print_grid(grid):
     for row in grid:
         for val in row:
@@ -170,6 +178,7 @@ def print_grid(grid):
         
         print("\n", end="")
 
+# Given the area grid, generates connections between areas randomly
 def get_random_connections(areas):
     connection_grid = np.zeros(areas.shape, dtype=int)
     limits = {(1, 2):[], (2, 3):[], (3, 1):[]}
@@ -234,7 +243,7 @@ def get_random_connections(areas):
         x1, y1 = value[0][0] * 4 + 2, value[0][1] * 4 + 2
         x2, y2 = value[1][0] * 4 + 2, value[1][1] * 4 + 2
 
-        print(x1, y1, ":", x2, y2)
+        #print(x1, y1, ":", x2, y2)
 
         if x1 == x2:
             final_x = x1
@@ -244,11 +253,11 @@ def get_random_connections(areas):
             final_x = min(x1, x2) + 2
         
         final_area_grid[(final_y, final_x)] = -1
-    
-
+                
 
     return final_area_grid
 
+# Given the connections grid, adds the connections in to the grid
 def fill_connections(grid, connection_grid):
     conn_to_string = {
         1: "connection1-2",
@@ -272,42 +281,87 @@ def fill_connections(grid, connection_grid):
             elif node.node_type == "tile":
                 node.tile_type = conn_to_string[connection_grid[y][x]]
 
+# given a vortex, is it connected to a wall?
 def has_adjacent_occupied(vortex_pos, grid):
-    adjacents = utils.get_adjacents(vortex_pos, include_straight=True, include_diagonals=False)
+    adjacents = utils.get_adjacents(vortex_pos, include_straight=True, include_diagonals=False, multiplier=2)
     for adjacent in adjacents:
-        adj1 = [adjacent[1]*2, adjacent[0]*2]
-        if adj1[0] < 0 or adj1[0] >= len(grid) or adj1[1] < 0 or adj1[1] >= len(grid[0]):
-            return False
-        if grid[adj1[0]][adj1[1]].status == "occupied":
+        if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+            continue
+        if grid[adjacent[1]][adjacent[0]].status == "occupied":
             return True
     return False
 
-def fill_start(areas_grid, connection_grid, grid):
-    possible_start_verticies = []
-    for y, row in enumerate(areas_grid):
+# Creates a random start tile in the grid
+def fill_start(areas, connection_grid, grid):
+    possible_start_nodes = []
+    for y, row in enumerate(areas):
         for x, node in enumerate(row):
-            if grid[y][x].node_type != "vortex":
-                continue
+            x1 = x * 4 + 2
+            y1 = y * 4 + 2
+            is_valid = False
             if node != 1:
-                continue
-            if connection_grid[y][x] != 0:
-                continue
-            if not has_adjacent_occupied((x, y), grid):
-                continue
-            possible_start_verticies.append((x, y))
-    
-    #start_vortex = random.choice(possible_start_verticies)
-    for start_vortex in possible_start_verticies:
-        adjacents = utils.get_adjacents(start_vortex, include_straight=False, include_diagonals=True)
-        for adjacent in adjacents:
-            grid[adjacent[0]][adjacent[1]].tile_type = "start"
-
+               continue
+            if x == 0 or y == 0 or x == len(areas[0]) - 1 or y == len(areas) - 1:
+                is_valid = True
+            adjacents = utils.get_adjacents((y, x), include_straight=True, include_diagonals=False)
+            for adjacent in adjacents:
+                if adjacent[0] < 0 or adjacent[0] >= len(areas) or adjacent[1] < 0 or adjacent[1] >= len(areas[0]):
+                    continue
+                if areas[adjacent] != node:
+                    is_valid = True
+            if not has_adjacent_occupied((x1, y1), grid):
+                is_valid = False
             
-
-
+            if is_valid:
+                possible_start_nodes.append((x1, y1))
     
+    if len(possible_start_nodes) == 0:
+        return
+    
+    """
+    for start_node in possible_start_nodes:
+        print("node_type", grid[start_node[1]][start_node[0]].node_type)
+        adj = utils.get_adjacents(start_node, include_straight=False, include_diagonals=True)
+        for adjacent in adj:
+            grid[adjacent[1]][adjacent[0]].tile_type = "start"
+    """
+    while True:
+        start_node = random.choice(possible_start_nodes)
+        if connection_grid[start_node[1]][start_node[0]] == 0:
+            adj = utils.get_adjacents(start_node, include_straight=False, include_diagonals=True)
+            for adjacent in adj:
+                grid[adjacent[1]][adjacent[0]].tile_type = "start"
+            break
+    
+# Fills the walls in the borders between areas
+def fill_walls_around_limits(grid, connection_grid):
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex":
+                
+                if connection_grid[y][x] == 0 or connection_grid[y][x] == -1:
+                    continue
+                adjacents = utils.get_adjacents((y, x), include_straight=True, include_diagonals=False, multiplier=2)
+                occ_count = 0
+                possible_walls = []
+                for adjacent in adjacents:
+                    if adjacent[0] < 0 or adjacent[0] >= len(grid) or adjacent[1] < 0 or adjacent[1] >= len(grid[0]):
+                        continue
+                    if grid[adjacent[0]][adjacent[1]].status == "occupied":
+                        occ_count += 1
+                    elif connection_grid[adjacent[0]][adjacent[1]] == 0:
+                        possible_walls.append(adjacent)
 
+                final_walls = []
+                random.shuffle(possible_walls)
+                if occ_count == 0:
+                    final_walls = possible_walls[0:2]
+                elif occ_count == 1:
+                    final_walls = possible_walls[0:1]
 
+                for wall in final_walls:
+                    grid[wall[0]][wall[1]].status = "occupied"
+            
 MAX_SIZE = 32
 MIN_SIZE = 12
 
@@ -336,9 +390,8 @@ while cycles > 100:
     if (size_x // 4) * (size_y // 4) < 9:
         n_of_areas = MIN_AREA_SIZE
     else:
-        n_of_areas = random.randint(2, 3)
+        n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
 
-    
     areas = get_random_areas(n_of_areas, grid)
     while not check_areas(areas):
         areas = get_random_areas(n_of_areas, grid)
@@ -363,19 +416,11 @@ connections_grid = get_random_connections(areas)
 
 fill_connections(grid, connections_grid)
 
-#fill_start(area_grid, connections_grid, grid)
+fill_start(areas, connections_grid, grid)
+
+fill_walls_around_limits(grid, connections_grid)
 
 print_grid(grid)
-
-"""
-
-vertices_tiles_positions = {}
-
-for i in vertices_tiles_positions:
-    adjs = utils.get_adjacents(i, include_diagonals=True, include_straight=False)
-    for adj in adjs:
-        grid[adj[1]][adj[0]].tile_type = vertices_tiles_positions[i]
-"""
 
 
 
