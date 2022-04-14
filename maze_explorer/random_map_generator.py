@@ -103,7 +103,7 @@ def check_areas(areas):
         counts.append(np.count_nonzero(areas == i+1))
     print(counts)
     for count in counts:
-        if 0 < count < 4:
+        if 0 < count < 3:
             return False 
     return True
     
@@ -269,6 +269,7 @@ def fill_connections(grid, connection_grid):
         for x, node in enumerate(row):
             if connection_grid[y][x] == 0:
                 continue
+            
             if connection_grid[y][x] == -1:
                 if node.node_type == "vortex":
                     node.status = "not_occupied"
@@ -278,6 +279,7 @@ def fill_connections(grid, connection_grid):
                             continue
                         if grid[adjacent[0]][adjacent[1]].node_type == "wall":
                             grid[adjacent[0]][adjacent[1]].status = "not_occupied"
+            
             elif node.node_type == "tile":
                 node.tile_type = conn_to_string[connection_grid[y][x]]
 
@@ -341,16 +343,18 @@ def fill_walls_around_limits(grid, connection_grid):
                 
                 if connection_grid[y][x] == 0 or connection_grid[y][x] == -1:
                     continue
-                adjacents = utils.get_adjacents((y, x), include_straight=True, include_diagonals=False, multiplier=2)
+                adjacents = list(utils.get_adjacents((y, x), include_straight=True, include_diagonals=False, multiplier=2))
+                diag_adjacents = [[(1, 2), (-1, 2)], [(1, -2), (-1, -2)], [(2, 1), (2, -1)],[(-2, 1), (-2, -1)],]
                 occ_count = 0
                 possible_walls = []
-                for adjacent in adjacents:
+                for index, adjacent in enumerate(adjacents):
                     if adjacent[0] < 0 or adjacent[0] >= len(grid) or adjacent[1] < 0 or adjacent[1] >= len(grid[0]):
                         continue
                     if grid[adjacent[0]][adjacent[1]].status == "occupied":
                         occ_count += 1
                     elif connection_grid[adjacent[0]][adjacent[1]] == 0:
-                        possible_walls.append(adjacent)
+                        possible_walls.append(diag_adjacents[index])
+                        
 
                 final_walls = []
                 random.shuffle(possible_walls)
@@ -360,7 +364,198 @@ def fill_walls_around_limits(grid, connection_grid):
                     final_walls = possible_walls[0:1]
 
                 for wall in final_walls:
-                    grid[wall[0]][wall[1]].status = "occupied"
+                    for w in wall:
+                        grid[y+ w[0]][x + w[1]].status = "occupied"
+                        adjacents = utils.get_adjacents((y+ w[0], x + w[1]), include_straight=True, include_diagonals=False)
+                        for adjacent in adjacents:
+                            if adjacent[0] < 0 or adjacent[0] >= len(grid) or adjacent[1] < 0 or adjacent[1] >= len(grid[0]):
+                                continue
+                            if grid[adjacent[0]][adjacent[1]].node_type == "vortex":
+                                grid[adjacent[0]][adjacent[1]].status = "occupied"
+                    
+                    """
+                    wall_adjs = []
+                    for adjacent in utils.get_adjacents(wall, include_straight=True, include_diagonals=False):
+                        if adjacent[0] < 0 or adjacent[0] >= len(grid) or adjacent[1] < 0 or adjacent[1] >= len(grid[0]):
+                            continue
+                        if grid[adjacent[0]][adjacent[1]].node_type == "wall":
+                            wall_adjs.append(adjacent)
+                    """
+                    """
+                    for wall_adj in wall_adjs:
+                        grid[wall_adj[0]][wall_adj[1]].status = "occupied"
+                    
+                        adjacents = utils.get_adjacents(wall_adj, include_straight=True, include_diagonals=False)
+                        for adjacent in adjacents:
+                            if adjacent[0] < 0 or adjacent[0] >= len(grid) or adjacent[1] < 0 or adjacent[1] >= len(grid[0]):
+                                continue
+                            if grid[adjacent[0]][adjacent[1]].node_type == "vortex":
+                                grid[adjacent[0]][adjacent[1]].status = "occupied"
+                    """
+def get_vortex_tile_type(grid, vortex_pos):
+    #assert grid[vortex_pos[1]][vortex_pos[0]].node_type == "vortex"
+    counts = {}
+    adjacents = utils.get_adjacents(vortex_pos, include_straight=False, include_diagonals=True)
+    for adjacent in adjacents:
+        if adjacent[0] < 0 or adjacent[1] >= len(grid) or adjacent[1] < 0 or adjacent[0] >= len(grid[0]):
+            continue
+        tile_type = grid[adjacent[1]][adjacent[0]].tile_type
+        if tile_type not in counts:
+            counts[tile_type] = 0
+        counts[tile_type] += 1
+    
+    for tile_type in counts:
+        if counts[tile_type] > 2:
+            return tile_type
+
+def get_valid_adjacents(pos, grid, invalid_tile_types=[]):
+    middle_adjacents = utils.get_adjacents(pos, include_straight=True, include_diagonals=False)
+    final_adjacents = utils.get_adjacents(pos, include_straight=True, include_diagonals=False, multiplier=2)
+    
+    valid_adjacents = []
+    for m_adjacent, f_adjacent in zip(middle_adjacents, final_adjacents):
+
+        is_valid = True
+        if m_adjacent[0] < 0 or m_adjacent[0] >= len(grid[0]) or m_adjacent[1] < 0 or m_adjacent[1] >= len(grid):
+            #print("INVALID BECAUSE MIDDLE OUT OF BOUNDS")
+            is_valid = False
+        if grid[m_adjacent[1]][m_adjacent[0]].status == "occupied":
+            #print("INVALID BECAUSE MIDDLE OCCUPIED")
+            is_valid = False
+    
+        if f_adjacent[0] < 0 or f_adjacent[0] >= len(grid[0]) or f_adjacent[1] < 0 or f_adjacent[1] >= len(grid):
+            is_valid = False
+            #print("INVALID BECAUSE FINAL OUT OF BOUNDS")
+        if grid[f_adjacent[1]][f_adjacent[0]].status == "occupied":
+            #print("INVALID BECAUSE FINAL OCCUPIED")
+            is_valid = False
+        v_tile_type = get_vortex_tile_type(grid, (f_adjacent[0], f_adjacent[1]))
+        if v_tile_type is not None:
+            if v_tile_type in invalid_tile_types:
+                is_valid = False
+                #print("NOT VALID FOR INVALID TILES")
+        if is_valid:
+            valid_adjacents.append(f_adjacent)
+
+    return valid_adjacents
+
+def bfs(grid, start_node, end_node, invalid_tile_types=[]):
+    queue = list()
+    queue.append(start_node)
+    visited = set()
+    visited.add(start_node)
+    while queue:
+        node = queue.pop(0)
+        if node == end_node:
+            return True, visited
+        adjacents = get_valid_adjacents(node, grid, invalid_tile_types)
+        for adjacent in adjacents:
+            if adjacent in visited or adjacent in queue:
+                continue
+            queue.append(adjacent)
+            visited.add(adjacent)
+    return False, visited
+
+
+def check_travesability_between_limits(start_tile_type, goal_tile_type, grid):
+    invalid_tile_types = ["connection1-2", "connection1-3", "connection2-3"]
+    if start_tile_type in invalid_tile_types:
+        invalid_tile_types.remove(start_tile_type)
+    if goal_tile_type in invalid_tile_types:
+        invalid_tile_types.remove(goal_tile_type)
+
+    start_vortex = None
+    goal_vortex = None
+
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex":
+                v_tile_type = get_vortex_tile_type(grid, (x, y))
+                if v_tile_type is None or v_tile_type == "undefined":
+                    continue
+                if v_tile_type == start_tile_type:
+                    start_vortex = (x, y)
+                if v_tile_type == goal_tile_type:
+                    goal_vortex = (x, y)
+    
+    """
+    grid[start_vortex[1]][start_vortex[0]].status = "occupied"
+    adj = get_valid_adjacents(start_vortex, grid, invalid_tile_types)
+    for adjacent in adj:
+        grid[adjacent[1]][adjacent[0]].status = "occupied"
+    """
+    
+    
+    if start_vortex is None or goal_vortex is None:
+        return False
+        
+    
+    accesible, visited = bfs(grid, start_vortex, goal_vortex, invalid_tile_types)
+
+    """
+    print(visited)
+
+    for v in visited:
+        grid[v[1]][v[0]].status = "occupied"
+    """
+
+    return accesible
+
+def check_area_traversability(area_n, grid):
+    tile_types_in_grid = []
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex":
+                v_tile_type = get_vortex_tile_type(grid, (x, y))
+                if v_tile_type is None or v_tile_type == "undefined":
+                    continue
+                tile_types_in_grid.append(v_tile_type)
+  
+    if area_n == 1:
+        is_valid = True
+        if "connection1-2" in tile_types_in_grid:
+            if not check_travesability_between_limits("start", "connection1-2", grid):
+                is_valid = False
+        if "connection1-3" in tile_types_in_grid:
+            if not check_travesability_between_limits("start", "connection1-3", grid):
+                is_valid = False
+    
+
+    elif area_n == 2:
+        is_valid = True
+        if "connection2-3" in tile_types_in_grid:
+            if "connection1-3" in tile_types_in_grid:
+                if not check_travesability_between_limits("connection1-3", "connection2-3", grid):
+                    is_valid = False
+
+        elif "connection1-2" in tile_types_in_grid:
+            if not check_travesability_between_limits("start", "connection1-2", grid):
+                is_valid = False
+
+    elif area_n == 3:
+        is_valid = True
+        if "connection2-3" in tile_types_in_grid:
+            if "connection1-2" in tile_types_in_grid:
+                if not check_travesability_between_limits("connection1-2", "connection2-3", grid):
+                    is_valid = False
+
+        elif "connection1-3" in tile_types_in_grid:
+            if not check_travesability_between_limits("start", "connection1-3", grid):
+                is_valid = False
+
+    return is_valid
+    
+
+def vortex_tile_type(grid):
+    vortex_tile_types = np.zeros((len(grid), len(grid[0])), dtype=str)
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex":
+                vortex_tile_types[y, x] = get_vortex_tile_type(grid, (x, y))
+            else:
+                 vortex_tile_types[y, x] = " "
+    print(vortex_tile_types)
+
             
 MAX_SIZE = 32
 MIN_SIZE = 12
@@ -388,7 +583,7 @@ while cycles > 100:
     grid = make_grid((shape_x, shape_y))
 
     if (size_x // 4) * (size_y // 4) < 9:
-        n_of_areas = MIN_AREA_SIZE
+        n_of_areas = MIN_N_AREAS
     else:
         n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
 
@@ -413,13 +608,47 @@ fill_area_limits(grid, area_grid)
 connections_grid = get_random_connections(areas)
 #print_area_grid(connections_grid)
 #print(connections_grid)
+do_break = False
+while not do_break:
+    fill_connections(grid, connections_grid)
 
-fill_connections(grid, connections_grid)
+    fill_start(areas, connections_grid, grid)
 
-fill_start(areas, connections_grid, grid)
+    fill_walls_around_limits(grid, connections_grid)
 
-fill_walls_around_limits(grid, connections_grid)
+    cycles = 0
+    while True:
+        fill_walls_around_limits(grid, connections_grid)
+        if check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid):
+            do_break = True
+            break
+            
+        if cycles > 20:
+            break
+        cycles += 1
+        print(cycles)
 
+
+#vortex_tile_type(grid)
+
+#check_area_navegability("start", "connection1-2", grid)
+
+print("area 1 traversable:", check_area_traversability(1, grid))
+print("area 2 traversable:", check_area_traversability(2, grid))
+print("area 3 traversable:", check_area_traversability(3, grid))
+
+
+"""
+fill_special_tiles()
+
+fill_obstacles_area_1()
+
+fill_obstacles_area_2()
+
+fill_obstacles_area3()
+
+check_area_navegability()
+"""
 print_grid(grid)
 
 
