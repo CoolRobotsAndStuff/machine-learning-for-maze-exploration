@@ -134,6 +134,7 @@ def print_area_grid(grid):
         2: "\033[1;31;47m██"+ "\033[0m",
         3: "\033[1;35;47m██"+ "\033[0m",
         0: "  ",
+        -1: "\033[1;30;47m██"+ "\033[0m",
     }
     for row in grid:
         for node in row:
@@ -419,14 +420,14 @@ def get_valid_adjacents(pos, grid, invalid_tile_types=[]):
         if m_adjacent[0] < 0 or m_adjacent[0] >= len(grid[0]) or m_adjacent[1] < 0 or m_adjacent[1] >= len(grid):
             #print("INVALID BECAUSE MIDDLE OUT OF BOUNDS")
             is_valid = False
-        if grid[m_adjacent[1]][m_adjacent[0]].status == "occupied":
+        elif grid[m_adjacent[1]][m_adjacent[0]].status == "occupied":
             #print("INVALID BECAUSE MIDDLE OCCUPIED")
             is_valid = False
     
         if f_adjacent[0] < 0 or f_adjacent[0] >= len(grid[0]) or f_adjacent[1] < 0 or f_adjacent[1] >= len(grid):
             is_valid = False
             #print("INVALID BECAUSE FINAL OUT OF BOUNDS")
-        if grid[f_adjacent[1]][f_adjacent[0]].status == "occupied":
+        elif grid[f_adjacent[1]][f_adjacent[0]].status == "occupied":
             #print("INVALID BECAUSE FINAL OCCUPIED")
             is_valid = False
         v_tile_type = get_vortex_tile_type(grid, (f_adjacent[0], f_adjacent[1]))
@@ -523,8 +524,7 @@ def check_area_traversability(area_n, grid):
 
     elif area_n == 2:
         is_valid = True
-        if "connection2-3" in tile_types_in_grid:
-            if "connection1-3" in tile_types_in_grid:
+        if "connection2-3" in tile_types_in_grid and "connection1-3" in tile_types_in_grid:
                 if not check_travesability_between_limits("connection1-3", "connection2-3", grid):
                     is_valid = False
 
@@ -556,6 +556,251 @@ def vortex_tile_type(grid):
                  vortex_tile_types[y, x] = " "
     print(vortex_tile_types)
 
+def get_mask_from_grid(grid, areas_grid, fill_special_tiles = True):
+    mask = np.ones((len(grid), len(grid[0])), dtype=int)
+    mask.fill(-1)
+
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            value = areas_grid[y, x]
+            
+            if node.status == "occupied":
+                    mask[y, x] = 0
+            elif node.node_type == "vortex" and fill_special_tiles:
+                v_tyle_type = get_vortex_tile_type(grid, (x, y))
+                if v_tyle_type is not None and v_tyle_type != "undefined":
+                    mask[y, x] = 0
+                    adjacents = utils.get_adjacents((x,y), include_straight=True, include_diagonals=True)
+                    for adjacent in adjacents:
+                        if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                            continue
+                        mask[adjacent[1], adjacent[0]] = 0
+                
+            elif node.node_type == "tile":
+                if node.tile_type != "undefined" and fill_special_tiles:
+                    mask[y, x] = 0
+    #print_area_grid(mask)
+    for y, row in enumerate(mask):
+        for x, node in enumerate(row):
+            value = areas_grid[y, x]
+            if node == -1:
+                if value != 0 and value != -1:
+                    mask[y, x] = value
+                else:
+                    color_counts = {1: 0, 2: 0, 3: 0}
+                    adjacents = utils.get_adjacents((x,y), include_straight=True, include_diagonals=True)
+                    for adjacent in adjacents:
+                        if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                            continue
+                        if area_grid[adjacent[1], adjacent[0]] in color_counts:
+                                color_counts[area_grid[adjacent[1], adjacent[0]]] += 1
+                    max_value = 0
+                    final_color = -1
+                    for color in color_counts:
+                        if color_counts[color] > max_value:
+                            max_value = color_counts[color]
+                            final_color = color                 
+                    mask[y, x] = final_color
+                        
+                    
+    return mask
+
+def fill_special_tiles(grid, mask):
+    special_tiles = ("checkpoint", "swamp") 
+    odds = 0.6
+    colour_counts = {}
+    max_density = 0.01
+    for colour in (1, 2, 3):
+        colour_count = 0
+        for y, row in enumerate(mask):
+            for x, node in enumerate(row):
+                if node == colour:
+                    colour_count += 1
+        if colour_count > 0:
+            colour_counts[colour] = random.randint(0, int(colour_count * max_density) + 1)
+    
+    for colour in colour_counts:
+        cycles = 0
+        while cycles < colour_counts[colour]:
+            random_vortex = get_random_vortex_position(grid, False)
+            
+            if (random_vortex[0] - 2) % 4 != 0:
+                continue
+            if (random_vortex[1] - 2) % 4 != 0:
+                continue
+            
+            if mask[random_vortex[1], random_vortex[0]] != colour:
+                continue
+            if random.random() > odds:
+                tile_type = "swamp"
+            else:
+                tile_type = "checkpoint"
+            adjacents = utils.get_adjacents(random_vortex, include_straight=False, include_diagonals=True)
+            for adjacent in adjacents:
+                if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                    continue
+                grid[adjacent[1]][adjacent[0]].tile_type = tile_type
+            cycles += 1
+
+
+
+def area_accesibility_bfs(grid, mask, start_pos, area_n):
+    visited = set()
+    queue = []
+    if mask[start_pos[1], start_pos[0]] == area_n:
+        queue.append(start_pos)
+        visited.add(start_pos)
+    else:
+        small_adjs = get_valid_adjacents(start_pos, grid, ["hole",])
+        for adj in small_adjs:
+            if mask[adj[1], adj[0]] == area_n:
+                queue.append(adj)
+                visited.add(adj)
+            big_adjs = get_valid_adjacents(adj, grid, ["hole",])
+            for big_adj in big_adjs:
+                if mask[big_adj[1], big_adj[0]] == area_n:
+                    queue.append(big_adj)
+                    visited.add(big_adj)
+
+    while len(queue) > 0:
+        current_pos = queue.pop(0)
+        adjacents = get_valid_adjacents(current_pos, grid, ["hole"])
+        for adjacent in adjacents:
+            if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                continue
+            if mask[adjacent[1], adjacent[0]] == area_n:
+                if adjacent not in visited and adjacent not in queue:
+                    queue.append(adjacent)
+                    visited.add(adjacent)
+    return visited
+
+def get_area_accesibility(grid, mask, area_n):
+    if area_n == 1:
+        possible_starts = ("start",)
+    elif area_n == 2:
+        possible_starts = ("connection1-2", "connection2-3")
+    elif area_n == 3:
+        possible_starts = ("connection2-3", "connection1-3")
+    
+    tile_types_in_grid = {}
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex":
+                v_tile_type = get_vortex_tile_type(grid, (x, y))
+                if v_tile_type is None or v_tile_type == "undefined":
+                    continue
+                tile_types_in_grid[v_tile_type] = (x, y)
+
+
+    print("tile_types_in_grid", tile_types_in_grid)
+    accesible_set = set()
+    for start_type in possible_starts:
+        if start_type in tile_types_in_grid:
+            start_pos = tile_types_in_grid[start_type]
+            visited = area_accesibility_bfs(grid, mask, start_pos, area_n)
+            print("area accesibility", len(visited))
+            accesible_set = accesible_set.union(visited)
+    return len(accesible_set)
+    
+    
+def get_area_vortex_count(grid, mask, area_n):
+    vortex_count = 0
+    for y, row in enumerate(mask):
+        for x, node in enumerate(row):
+            if node == area_n and grid[y][x].node_type == "vortex":
+                vortex_count += 1
+    return vortex_count
+
+    
+def check_area_accesibilty(grid, mask, area_n):
+    threshold = 0.3
+
+    traversable_verticies = get_area_accesibility(grid, mask, area_n)
+    total_verticies = get_area_vortex_count(grid, mask, area_n)
+    
+    if total_verticies == 0:
+        return True
+    print("area" + str(area_n), traversable_verticies, total_verticies, traversable_verticies / total_verticies)
+    if traversable_verticies > total_verticies:
+        raise Exception("Traversable verticies greater than total verticies")
+
+    if traversable_verticies < 4:
+        return False
+    
+    elif traversable_verticies > 20:
+        return True
+
+    
+
+    if traversable_verticies / total_verticies > threshold:
+        return True
+    else:
+        return False
+
+def erode(possible_walls, grid):
+    final_walls = copy.deepcopy(possible_walls)
+    base_probability = 0.01
+    expansion_coefficient = 0.2
+    temp_walls = copy.deepcopy(final_walls)
+    
+    for wall in final_walls:
+        #rev_wall = (wall[1], wall[0])
+        blanks = []
+        adjacents = utils.get_adjacents(wall, include_straight=True, include_diagonals=False, multiplier=2)
+        for adjacent in adjacents:
+            if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                continue
+            if grid[adjacent[1]][adjacent[0]].status == "not_occupied":
+                blanks.append(adjacent)
+
+        n_of_blanks = len(blanks)
+        prob = base_probability + (n_of_blanks / 4) * expansion_coefficient
+        if random.random() < prob:
+            temp_walls.remove(wall)
+    final_walls = copy.deepcopy(temp_walls)
+    return final_walls
+
+def fill_in_walls(grid, walls):
+    for wall in walls:
+        grid[wall[1]][wall[0]].status = "occupied"
+        adjacents = utils.get_adjacents(wall, include_straight=True, include_diagonals=False)
+        for adjacent in adjacents:
+            if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                continue
+            if grid[adjacent[1]][adjacent[0]].node_type == "vortex":
+                grid[adjacent[1]][adjacent[0]].status = "occupied"
+
+def fill_walls_area_2(grid, mask, mask_with_tiles):
+    max_density = 0.5
+
+    possible_walls = []
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if mask_with_tiles[y, x] == 2:
+                if node.node_type == "wall":
+                    possible_walls.append([x, y])
+    
+    if len(possible_walls) == 0:
+        return grid
+
+    wall_poses = copy.deepcopy(possible_walls)
+    my_grid = copy.deepcopy(grid)
+    while True:
+        wall_poses = erode(wall_poses, my_grid)
+        my_grid = copy.deepcopy(grid)
+
+        fill_in_walls(my_grid, wall_poses)
+        print_grid(my_grid)
+
+        if len(wall_poses) == 0:
+            return grid
+
+        print("AREA TRAVERSABLE", check_area_traversability(2, my_grid))
+        traversable = check_area_traversability(2, my_grid) and check_area_traversability(3, my_grid) and check_area_traversability(1, my_grid)
+        if check_area_accesibilty(my_grid, mask, 2) and traversable:
+            break
+    
+    return my_grid
             
 MAX_SIZE = 32
 MIN_SIZE = 12
@@ -567,66 +812,91 @@ MIN_N_AREAS = 2
 
 assert (MIN_SIZE ** 2) >= MIN_AREA_SIZE * MIN_N_AREAS
 
-cycles = 101
-while cycles > 100:
-    cycles = 0
-    size_x = random.randint(MIN_SIZE, MAX_SIZE)
-    size_y = random.randint(MIN_SIZE, MAX_SIZE)
-
-    while (size_x // 4) * (size_y // 4) < MIN_N_AREAS * MIN_AREA_SIZE:
+do_break_1 = False
+while True:
+    cycles = 101
+    while cycles > 100:
+        cycles = 0
         size_x = random.randint(MIN_SIZE, MAX_SIZE)
         size_y = random.randint(MIN_SIZE, MAX_SIZE)
 
-    shape_x =  size_x // 4 * 4 + 1
-    shape_y = size_y // 4 * 4 + 1
+        while (size_x // 4) * (size_y // 4) < MIN_N_AREAS * MIN_AREA_SIZE:
+            size_x = random.randint(MIN_SIZE, MAX_SIZE)
+            size_y = random.randint(MIN_SIZE, MAX_SIZE)
 
-    grid = make_grid((shape_x, shape_y))
+        shape_x =  size_x // 4 * 4 + 1
+        shape_y = size_y // 4 * 4 + 1
 
-    if (size_x // 4) * (size_y // 4) < 9:
-        n_of_areas = MIN_N_AREAS
-    else:
-        n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
+        grid = make_grid((shape_x, shape_y))
 
-    areas = get_random_areas(n_of_areas, grid)
-    while not check_areas(areas):
+        if (size_x // 4) * (size_y // 4) < 9:
+            n_of_areas = MIN_N_AREAS
+        else:
+            n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
+
         areas = get_random_areas(n_of_areas, grid)
-        cycles += 1
-        if cycles > 100:
-            break
+        while not check_areas(areas):
+            areas = get_random_areas(n_of_areas, grid)
+            cycles += 1
+            if cycles > 100:
+                break
 
-print_area_grid(areas)
+    print_area_grid(areas)
 
-area_grid = generate_areas(areas, grid)
+    area_grid = generate_areas(areas, grid)
 
-print_area_grid(area_grid)
-#print(area_grid)
+    print_area_grid(area_grid)
+    #print(area_grid)
 
-fill_grid_borders((shape_x, shape_y))
+    fill_grid_borders((shape_x, shape_y))
 
-fill_area_limits(grid, area_grid)
+    fill_area_limits(grid, area_grid)
 
-connections_grid = get_random_connections(areas)
-#print_area_grid(connections_grid)
-#print(connections_grid)
-do_break = False
-while not do_break:
-    fill_connections(grid, connections_grid)
+    
+    #print_area_grid(connections_grid)
+    #print(connections_grid)
+    backup_grid = copy.deepcopy(grid)
+    total_cycles = 0
+    do_break = False
+    while not do_break:
+        grid = copy.deepcopy(backup_grid)
+        
+        connections_grid = get_random_connections(areas)
 
-    fill_start(areas, connections_grid, grid)
+        fill_connections(grid, connections_grid)
 
-    fill_walls_around_limits(grid, connections_grid)
+        fill_start(areas, connections_grid, grid)
 
-    cycles = 0
-    while True:
         fill_walls_around_limits(grid, connections_grid)
-        if check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid):
-            do_break = True
+
+        backup_grid_1 = copy.deepcopy(grid)
+        cycles = 0
+        while True:
+            print(cycles)
+            grid = copy.deepcopy(backup_grid_1)
+            fill_walls_around_limits(grid, connections_grid)
+
+            mask_no_tiles = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+            print_area_grid(mask_no_tiles)
+            traversable = check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid)
+            accesible = check_area_accesibilty(grid, mask_no_tiles, 1) and check_area_accesibilty(grid, mask_no_tiles, 2) and check_area_accesibilty(grid, mask_no_tiles, 3)
+            if not accesible:
+                print("CHANGED BECAUSE NOT ACCESIBLE")
+            if traversable and accesible:
+                do_break = True
+                do_break_1 = True
+                break
+                
+            if cycles > 20:
+                break
+            cycles += 1
+        total_cycles += 1
+        if total_cycles > 20:
             break
-            
-        if cycles > 20:
-            break
-        cycles += 1
-        print(cycles)
+
+    if do_break_1:
+        break
+
 
 
 #vortex_tile_type(grid)
@@ -637,10 +907,23 @@ print("area 1 traversable:", check_area_traversability(1, grid))
 print("area 2 traversable:", check_area_traversability(2, grid))
 print("area 3 traversable:", check_area_traversability(3, grid))
 
+mask = get_mask_from_grid(grid, area_grid)
+
+
+
+#fill_special_tiles(grid, mask)
+
+mask = get_mask_from_grid(grid, area_grid)
+print_area_grid(mask)
+
+mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+
+wall_grid = fill_walls_area_2(grid, mask_no_tiles_2, mask)
+
+
+grid = copy.deepcopy(wall_grid)
 
 """
-fill_special_tiles()
-
 fill_obstacles_area_1()
 
 fill_obstacles_area_2()
