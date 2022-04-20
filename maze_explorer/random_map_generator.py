@@ -101,7 +101,7 @@ def check_areas(areas):
     counts = list()
     for i in range(3):
         counts.append(np.count_nonzero(areas == i+1))
-    print(counts)
+    #print(counts)
     for count in counts:
         if 0 < count < 3:
             return False 
@@ -163,13 +163,18 @@ def fill_area_limits(grid, area_grid):
                     continue
                 adj_values.append(area_grid[adjacent])
             numbers = {1, 2, 3}
-            
+            is_limit = False
             for value in adj_values:
                 if value in numbers:
                     numbers.remove(value)
                     for value in adj_values:
                         if value in numbers:
-                            node.status = "occupied"
+                            is_limit = True
+                            break
+                    if is_limit:
+                        break
+            if is_limit:
+                node.status = "occupied"
 
 # Prints the grid
 def print_grid(grid):
@@ -692,13 +697,13 @@ def get_area_accesibility(grid, mask, area_n):
                 tile_types_in_grid[v_tile_type] = (x, y)
 
 
-    print("tile_types_in_grid", tile_types_in_grid)
+    #print("tile_types_in_grid", tile_types_in_grid)
     accesible_set = set()
     for start_type in possible_starts:
         if start_type in tile_types_in_grid:
             start_pos = tile_types_in_grid[start_type]
             visited = area_accesibility_bfs(grid, mask, start_pos, area_n)
-            print("area accesibility", len(visited))
+            #print("area accesibility", len(visited))
             accesible_set = accesible_set.union(visited)
     return len(accesible_set)
     
@@ -715,19 +720,22 @@ def get_area_vortex_count(grid, mask, area_n):
 def check_area_accesibilty(grid, mask, area_n):
     threshold = 0.3
 
+    if area_n == 1:
+        threshold = 0.6
+
     traversable_verticies = get_area_accesibility(grid, mask, area_n)
     total_verticies = get_area_vortex_count(grid, mask, area_n)
     
     if total_verticies == 0:
         return True
-    print("area" + str(area_n), traversable_verticies, total_verticies, traversable_verticies / total_verticies)
+    #print("area" + str(area_n), traversable_verticies, total_verticies, traversable_verticies / total_verticies)
     if traversable_verticies > total_verticies:
         raise Exception("Traversable verticies greater than total verticies")
 
     if traversable_verticies < 4:
         return False
     
-    elif traversable_verticies > 20:
+    elif traversable_verticies > 20 and area_n != 1:
         return True
 
     
@@ -790,17 +798,184 @@ def fill_walls_area_2(grid, mask, mask_with_tiles):
         my_grid = copy.deepcopy(grid)
 
         fill_in_walls(my_grid, wall_poses)
-        print_grid(my_grid)
+        #print_grid(my_grid)
 
         if len(wall_poses) == 0:
             return grid
 
-        print("AREA TRAVERSABLE", check_area_traversability(2, my_grid))
+        #print("AREA 2 TRAVERSABLE", check_area_traversability(2, my_grid))
         traversable = check_area_traversability(2, my_grid) and check_area_traversability(3, my_grid) and check_area_traversability(1, my_grid)
         if check_area_accesibilty(my_grid, mask, 2) and traversable:
             break
     
     return my_grid
+
+def round_random_corners(grid, mask, area_n):
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+
+            if node.node_type == "vortex" and node.status == "occupied" and mask[y, x] == area_n:
+                adjacents = utils.get_adjacents((x, y), include_straight=True, include_diagonals=False)
+                occ_walls = []
+                for adjacent in adjacents:
+                    if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                        continue
+                    if grid[adjacent[1]][adjacent[0]].node_type == "wall":
+                        if grid[adjacent[1]][adjacent[0]].status == "occupied":
+                            occ_walls.append(adjacent)
+                if len(occ_walls) == 2:
+                    if occ_walls[0][0] == occ_walls[1][0]:
+                        continue
+                    if occ_walls[0][1] == occ_walls[1][1]:
+                        continue
+                    node.status = random.choice(("occupied", "not_occupied"))
+                elif len(occ_walls) > 2:
+                    node.status = random.choice(("occupied", "not_occupied"))
+                
+
+def fill_walls_area_3(grid, mask, mask_with_tiles):
+    max_density = 0.5
+
+    possible_walls = []
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if mask_with_tiles[y, x] == 3:
+                if node.node_type == "wall":
+                    possible_walls.append([x, y])
+    
+    if len(possible_walls) == 0:
+        return grid
+
+    wall_poses = copy.deepcopy(possible_walls)
+    my_grid = copy.deepcopy(grid)
+    while True:
+        wall_poses = erode(wall_poses, my_grid)
+        my_grid = copy.deepcopy(grid)
+
+        fill_in_walls(my_grid, wall_poses)
+        #print_grid(my_grid)
+
+        if len(wall_poses) == 0:
+            return grid
+
+        #print("AREA 3 TRAVERSABLE", check_area_traversability(3, my_grid))
+        traversable = check_area_traversability(2, my_grid) and check_area_traversability(3, my_grid) and check_area_traversability(1, my_grid)
+        if check_area_accesibilty(my_grid, mask, 3) and traversable:
+            break
+    
+    round_random_corners(my_grid, mask, 3)
+    
+    return my_grid
+
+def erode_area_1_walls(walls):
+    final_walls = copy.deepcopy(walls)
+    base_probability = 0.3
+    
+    for wall in final_walls:
+        if random.random() < base_probability:
+            final_walls.remove(wall)
+    return final_walls
+
+def fill_walls_area_1(grid, mask, mask_with_tiles):
+    diag_adjacents = [[(1, 2), (-1, 2)], [(1, -2), (-1, -2)], [(2, 1), (2, -1)],[(-2, 1), (-2, -1)],]
+    possible_walls = []
+    prohibited_walls = []
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if (y - 2) % 4 == 0 and (x - 2) % 4 == 0:
+                assert(node.node_type == "vortex")
+                v_tile_type = get_vortex_tile_type(grid, (x, y))
+                #print("VORTEX TILE TYPE", v_tile_type)
+                if v_tile_type == "undefined":
+                    for adj in diag_adjacents:
+                        possible_wall =[]
+                        for w in adj:
+                            y1 = y + w[1]
+                            x1 = x + w[0]
+                            if y1 < 0 or y1 >= len(grid) or x1 < 0 or x1 >= len(grid[0]):
+                                continue
+                            if mask_with_tiles[y1, x1] == 1:
+                                possible_wall.append([x1, y1])
+                        if possible_wall not in possible_walls:
+                            possible_walls.append(possible_wall)
+                else:
+                    for adj in diag_adjacents:
+                        proh_wall =[]
+                        for w in adj:
+                            y1 = y + w[1]
+                            x1 = x + w[0]
+                            if y1 < 0 or y1 >= len(grid) or x1 < 0 or x1 >= len(grid[0]):
+                                continue
+                            
+                            proh_wall.append([x1, y1])
+                        if proh_wall not in prohibited_walls:
+                            prohibited_walls.append(proh_wall)
+    
+    if len(possible_walls) == 0:
+        return grid
+
+    for p_wall in prohibited_walls:
+        if p_wall in possible_walls:
+            possible_walls.remove(p_wall)
+
+    wall_poses = copy.deepcopy(possible_walls)
+    my_grid = copy.deepcopy(grid)
+    while True:
+        wall_poses = erode_area_1_walls(wall_poses)
+        my_grid = copy.deepcopy(grid)
+        for wall in wall_poses:
+            fill_in_walls(my_grid, wall)
+
+        if len(wall_poses) == 0:
+            return grid
+
+        #print("AREA 1 TRAVERSABLE", check_area_traversability(1, my_grid))
+        traversable = check_area_traversability(2, my_grid) and check_area_traversability(3, my_grid) and check_area_traversability(1, my_grid)
+        if check_area_accesibilty(my_grid, mask, 1) and traversable:
+            break
+    
+    return my_grid
+
+def get_2_3_limits(mask):
+    limits = []
+    for y, row in enumerate(mask):
+        for x, node in enumerate(row):
+            if node == 0:
+                is_2 = False
+                is_3 = False
+                adjacents = utils.get_adjacents((x, y), include_straight=True, include_diagonals=False)
+                for adjacent in adjacents:
+                    if adjacent[0] < 0 or adjacent[0] >= len(mask[0]) or adjacent[1] < 0 or adjacent[1] >= len(mask):
+                        continue
+                    if mask[adjacent[1]][adjacent[0]] == 2:
+                        is_2 = True
+                    if mask[adjacent[1]][adjacent[0]] == 3:
+                        is_3 = True
+                if is_2 and is_3:
+                    limits.append((x, y))
+    return limits
+
+def dot_2_3_limits(grid, mask):
+    limits = get_2_3_limits(mask)
+    print("limits", limits)
+    
+    for limit in limits:
+        adjacent_occupied = True
+        if grid[limit[1]][limit[0]].node_type != "wall":
+            continue
+        adjacents = list(utils.get_adjacents(limit, include_straight=True, include_diagonals=False, multiplier=2))
+        adjacents += list(utils.get_adjacents(limit, include_straight=False, include_diagonals=True))
+        for adjacent in adjacents:
+            if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                continue
+            if adjacent in limits:
+                if grid[adjacent[1]][adjacent[0]].status != "occupied":
+                    adjacent_occupied = False
+                    break
+        if adjacent_occupied:
+            new_status = random.choice(["occupied", "not_occupied"])
+            grid[limit[1]][limit[0]].status = new_status
+
             
 MAX_SIZE = 32
 MIN_SIZE = 12
@@ -829,10 +1004,14 @@ while True:
 
         grid = make_grid((shape_x, shape_y))
 
+        """
         if (size_x // 4) * (size_y // 4) < 9:
             n_of_areas = MIN_N_AREAS
         else:
             n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
+        """
+
+        n_of_areas = 3
 
         areas = get_random_areas(n_of_areas, grid)
         while not check_areas(areas):
@@ -860,6 +1039,8 @@ while True:
     do_break = False
     while not do_break:
         grid = copy.deepcopy(backup_grid)
+
+        only_limits_mask = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
         
         connections_grid = get_random_connections(areas)
 
@@ -872,7 +1053,7 @@ while True:
         backup_grid_1 = copy.deepcopy(grid)
         cycles = 0
         while True:
-            print(cycles)
+            #print(cycles)
             grid = copy.deepcopy(backup_grid_1)
             fill_walls_around_limits(grid, connections_grid)
 
@@ -881,7 +1062,8 @@ while True:
             traversable = check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid)
             accesible = check_area_accesibilty(grid, mask_no_tiles, 1) and check_area_accesibilty(grid, mask_no_tiles, 2) and check_area_accesibilty(grid, mask_no_tiles, 3)
             if not accesible:
-                print("CHANGED BECAUSE NOT ACCESIBLE")
+                pass
+                #print("CHANGED BECAUSE NOT ACCESIBLE")
             if traversable and accesible:
                 do_break = True
                 do_break_1 = True
@@ -903,9 +1085,9 @@ while True:
 
 #check_area_navegability("start", "connection1-2", grid)
 
-print("area 1 traversable:", check_area_traversability(1, grid))
-print("area 2 traversable:", check_area_traversability(2, grid))
-print("area 3 traversable:", check_area_traversability(3, grid))
+#print("area 1 traversable:", check_area_traversability(1, grid))
+#print("area 2 traversable:", check_area_traversability(2, grid))
+#print("area 3 traversable:", check_area_traversability(3, grid))
 
 mask = get_mask_from_grid(grid, area_grid)
 
@@ -918,10 +1100,18 @@ print_area_grid(mask)
 
 mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
 
+print_area_grid(only_limits_mask)
+dot_2_3_limits(grid, only_limits_mask)
+
+
 wall_grid = fill_walls_area_2(grid, mask_no_tiles_2, mask)
 
+wall_grid = fill_walls_area_3(wall_grid, mask_no_tiles_2, mask)
+
+wall_grid = fill_walls_area_1(wall_grid, mask_no_tiles_2, mask)
 
 grid = copy.deepcopy(wall_grid)
+
 
 """
 fill_obstacles_area_1()
