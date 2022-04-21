@@ -622,7 +622,7 @@ def fill_special_tiles(grid, mask):
                 if node == colour:
                     colour_count += 1
         if colour_count > 0:
-            colour_counts[colour] = random.randint(0, int(colour_count * max_density) + 1)
+            colour_counts[colour] = random.randint(0, int(colour_count * max_density))
     
     for colour in colour_counts:
         cycles = 0
@@ -1058,7 +1058,7 @@ while True:
             fill_walls_around_limits(grid, connections_grid)
 
             mask_no_tiles = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
-            print_area_grid(mask_no_tiles)
+            #print_area_grid(mask_no_tiles)
             traversable = check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid)
             accesible = check_area_accesibilty(grid, mask_no_tiles, 1) and check_area_accesibilty(grid, mask_no_tiles, 2) and check_area_accesibilty(grid, mask_no_tiles, 3)
             if not accesible:
@@ -1088,19 +1088,17 @@ while True:
 #print("area 1 traversable:", check_area_traversability(1, grid))
 #print("area 2 traversable:", check_area_traversability(2, grid))
 #print("area 3 traversable:", check_area_traversability(3, grid))
-
+print_area_grid(mask_no_tiles)
 mask = get_mask_from_grid(grid, area_grid)
 
-
-
-#fill_special_tiles(grid, mask)
+fill_special_tiles(grid, mask)
 
 mask = get_mask_from_grid(grid, area_grid)
 print_area_grid(mask)
 
 mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
 
-print_area_grid(only_limits_mask)
+#print_area_grid(only_limits_mask)
 dot_2_3_limits(grid, only_limits_mask)
 
 
