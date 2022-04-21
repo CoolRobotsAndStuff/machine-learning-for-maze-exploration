@@ -1,5 +1,5 @@
 import random
-from grid_maker import make_grid
+from grid_maker import make_grid, Node
 import utils
 import numpy as np
 import copy
@@ -142,7 +142,7 @@ def print_area_grid(grid):
         print()
 
 # Fills the perimeter of the grid
-def fill_grid_borders(shape):
+def fill_grid_borders(shape, grid):
     for x in range(0, shape[1]):
         grid[0][x].status = "occupied"
         grid[-1][x].status = "occupied"
@@ -185,7 +185,7 @@ def print_grid(grid):
         print("\n", end="")
 
 # Given the area grid, generates connections between areas randomly
-def get_random_connections(areas):
+def get_random_connections(areas, grid):
     connection_grid = np.zeros(areas.shape, dtype=int)
     limits = {(1, 2):[], (2, 3):[], (3, 1):[]}
     for y, row in enumerate(areas):
@@ -227,7 +227,7 @@ def get_random_connections(areas):
             val = 3
 
         connection_grid[y][x] = val
-    print(connection_grid)
+    #print(connection_grid)
 
     final_area_grid = np.zeros((len(grid), len(grid[0])), dtype=int)
 
@@ -597,8 +597,8 @@ def get_mask_from_grid(grid, areas_grid, fill_special_tiles = True):
                     for adjacent in adjacents:
                         if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
                             continue
-                        if area_grid[adjacent[1], adjacent[0]] in color_counts:
-                                color_counts[area_grid[adjacent[1], adjacent[0]]] += 1
+                        if areas_grid[adjacent[1], adjacent[0]] in color_counts:
+                                color_counts[areas_grid[adjacent[1], adjacent[0]]] += 1
                     max_value = 0
                     final_color = -1
                     for color in color_counts:
@@ -957,7 +957,8 @@ def get_2_3_limits(mask):
 
 def dot_2_3_limits(grid, mask):
     limits = get_2_3_limits(mask)
-    print("limits", limits)
+
+    #print("limits", limits)
     
     for limit in limits:
         adjacent_occupied = True
@@ -976,6 +977,19 @@ def dot_2_3_limits(grid, mask):
             new_status = random.choice(["occupied", "not_occupied"])
             grid[limit[1]][limit[0]].status = new_status
 
+def normalize_to_size(grid, final_shape):
+    new_grid = []
+    for y, row in enumerate(grid):
+        new_row = []
+        for x, node in enumerate(row):
+            new_row.append(node)
+        new_grid.append(new_row)
+    while len(new_grid) <= final_shape[1]:
+        new_grid.append([])
+    for row in new_grid:
+        while len(row) <= final_shape[0]:
+            row.append(Node("undefined", "undefined", "undefined"))
+    return new_grid
             
 MAX_SIZE = 32
 MIN_SIZE = 12
@@ -987,128 +1001,134 @@ MIN_N_AREAS = 2
 
 assert (MIN_SIZE ** 2) >= MIN_AREA_SIZE * MIN_N_AREAS
 
-do_break_1 = False
-while True:
-    cycles = 101
-    while cycles > 100:
-        cycles = 0
-        size_x = random.randint(MIN_SIZE, MAX_SIZE)
-        size_y = random.randint(MIN_SIZE, MAX_SIZE)
-
-        while (size_x // 4) * (size_y // 4) < MIN_N_AREAS * MIN_AREA_SIZE:
+def generate_map(visualize=True):
+    do_break_1 = False
+    while True:
+        cycles = 101
+        while cycles > 100:
+            cycles = 0
             size_x = random.randint(MIN_SIZE, MAX_SIZE)
             size_y = random.randint(MIN_SIZE, MAX_SIZE)
 
-        shape_x =  size_x // 4 * 4 + 1
-        shape_y = size_y // 4 * 4 + 1
+            while (size_x // 4) * (size_y // 4) < MIN_N_AREAS * MIN_AREA_SIZE:
+                size_x = random.randint(MIN_SIZE, MAX_SIZE)
+                size_y = random.randint(MIN_SIZE, MAX_SIZE)
 
-        grid = make_grid((shape_x, shape_y))
+            shape_x =  size_x // 4 * 4 + 1
+            shape_y = size_y // 4 * 4 + 1
 
-        """
-        if (size_x // 4) * (size_y // 4) < 9:
-            n_of_areas = MIN_N_AREAS
-        else:
-            n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
-        """
+            grid = make_grid((shape_x, shape_y))
 
-        n_of_areas = 3
+            """
+            if (size_x // 4) * (size_y // 4) < 9:
+                n_of_areas = MIN_N_AREAS
+            else:
+                n_of_areas = random.randint(MIN_N_AREAS, MAX_N_AREAS)
+            """
 
-        areas = get_random_areas(n_of_areas, grid)
-        while not check_areas(areas):
+            n_of_areas = 3
+
             areas = get_random_areas(n_of_areas, grid)
-            cycles += 1
-            if cycles > 100:
-                break
+            while not check_areas(areas):
+                areas = get_random_areas(n_of_areas, grid)
+                cycles += 1
+                if cycles > 100:
+                    break
+        if visualize:
+            print_area_grid(areas)
 
-    print_area_grid(areas)
+        area_grid = generate_areas(areas, grid)
+        if visualize:
+            print_area_grid(area_grid)
+        #print(area_grid)
 
-    area_grid = generate_areas(areas, grid)
+        fill_grid_borders((shape_x, shape_y), grid)
 
-    print_area_grid(area_grid)
-    #print(area_grid)
+        fill_area_limits(grid, area_grid)
 
-    fill_grid_borders((shape_x, shape_y))
-
-    fill_area_limits(grid, area_grid)
-
-    
-    #print_area_grid(connections_grid)
-    #print(connections_grid)
-    backup_grid = copy.deepcopy(grid)
-    total_cycles = 0
-    do_break = False
-    while not do_break:
-        grid = copy.deepcopy(backup_grid)
-
-        only_limits_mask = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
         
-        connections_grid = get_random_connections(areas)
+        #print_area_grid(connections_grid)
+        #print(connections_grid)
+        backup_grid = copy.deepcopy(grid)
+        total_cycles = 0
+        do_break = False
+        while not do_break:
+            grid = copy.deepcopy(backup_grid)
 
-        fill_connections(grid, connections_grid)
+            only_limits_mask = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+            
+            connections_grid = get_random_connections(areas, grid)
 
-        fill_start(areas, connections_grid, grid)
+            fill_connections(grid, connections_grid)
 
-        fill_walls_around_limits(grid, connections_grid)
+            fill_start(areas, connections_grid, grid)
 
-        backup_grid_1 = copy.deepcopy(grid)
-        cycles = 0
-        while True:
-            #print(cycles)
-            grid = copy.deepcopy(backup_grid_1)
             fill_walls_around_limits(grid, connections_grid)
 
-            mask_no_tiles = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
-            #print_area_grid(mask_no_tiles)
-            traversable = check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid)
-            accesible = check_area_accesibilty(grid, mask_no_tiles, 1) and check_area_accesibilty(grid, mask_no_tiles, 2) and check_area_accesibilty(grid, mask_no_tiles, 3)
-            if not accesible:
-                pass
-                #print("CHANGED BECAUSE NOT ACCESIBLE")
-            if traversable and accesible:
-                do_break = True
-                do_break_1 = True
+            backup_grid_1 = copy.deepcopy(grid)
+            cycles = 0
+            while True:
+                #print(cycles)
+                grid = copy.deepcopy(backup_grid_1)
+                fill_walls_around_limits(grid, connections_grid)
+
+                mask_no_tiles = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+                #print_area_grid(mask_no_tiles)
+                traversable = check_area_traversability(1, grid) and check_area_traversability(2, grid) and check_area_traversability(3, grid)
+                accesible = check_area_accesibilty(grid, mask_no_tiles, 1) and check_area_accesibilty(grid, mask_no_tiles, 2) and check_area_accesibilty(grid, mask_no_tiles, 3)
+                if not accesible:
+                    pass
+                    #print("CHANGED BECAUSE NOT ACCESIBLE")
+                if traversable and accesible:
+                    do_break = True
+                    do_break_1 = True
+                    break
+                    
+                if cycles > 20:
+                    break
+                cycles += 1
+            total_cycles += 1
+            if total_cycles > 20:
                 break
-                
-            if cycles > 20:
-                break
-            cycles += 1
-        total_cycles += 1
-        if total_cycles > 20:
+
+        if do_break_1:
             break
 
-    if do_break_1:
-        break
 
 
+    #vortex_tile_type(grid)
 
-#vortex_tile_type(grid)
+    #check_area_navegability("start", "connection1-2", grid)
 
-#check_area_navegability("start", "connection1-2", grid)
+    #print("area 1 traversable:", check_area_traversability(1, grid))
+    #print("area 2 traversable:", check_area_traversability(2, grid))
+    #print("area 3 traversable:", check_area_traversability(3, grid))
+    #print_area_grid(mask_no_tiles)
+    mask = get_mask_from_grid(grid, area_grid)
 
-#print("area 1 traversable:", check_area_traversability(1, grid))
-#print("area 2 traversable:", check_area_traversability(2, grid))
-#print("area 3 traversable:", check_area_traversability(3, grid))
-print_area_grid(mask_no_tiles)
-mask = get_mask_from_grid(grid, area_grid)
+    fill_special_tiles(grid, mask)
 
-fill_special_tiles(grid, mask)
+    mask = get_mask_from_grid(grid, area_grid)
+    if visualize:
+        print_area_grid(mask)
 
-mask = get_mask_from_grid(grid, area_grid)
-print_area_grid(mask)
+    mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
 
-mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
-
-#print_area_grid(only_limits_mask)
-dot_2_3_limits(grid, only_limits_mask)
+    #print_area_grid(only_limits_mask)
+    dot_2_3_limits(grid, only_limits_mask)
 
 
-wall_grid = fill_walls_area_2(grid, mask_no_tiles_2, mask)
+    wall_grid = fill_walls_area_2(grid, mask_no_tiles_2, mask)
 
-wall_grid = fill_walls_area_3(wall_grid, mask_no_tiles_2, mask)
+    wall_grid = fill_walls_area_3(wall_grid, mask_no_tiles_2, mask)
 
-wall_grid = fill_walls_area_1(wall_grid, mask_no_tiles_2, mask)
+    wall_grid = fill_walls_area_1(wall_grid, mask_no_tiles_2, mask)
 
-grid = copy.deepcopy(wall_grid)
+    grid = copy.deepcopy(wall_grid)
+
+    grid = normalize_to_size(grid, (MAX_SIZE, MAX_SIZE))
+
+    return grid
 
 
 """
@@ -1120,9 +1140,10 @@ fill_obstacles_area3()
 
 check_area_navegability()
 """
-print_grid(grid)
 
-
+if __name__ == "__main__":
+    grid = generate_map(visualize=False)
+    print_grid(grid)
 
 
 
