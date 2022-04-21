@@ -37,7 +37,6 @@ class Maze_Game():
     # Resets the game
     def reset_game(self, grid:list, initial_orientation:str="up"):
        
-
         self.entire_grid = copy.deepcopy(grid)  # The world
         self.grid_shape = [len(self.entire_grid), len(self.entire_grid[0])]  # The shape of the world
         # The part of the world the robot has discovered so far

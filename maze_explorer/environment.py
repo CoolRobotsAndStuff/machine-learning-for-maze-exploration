@@ -3,8 +3,10 @@ import os
 import gym
 from game import Maze_Game
 import json_loader
+from maze_explorer.map_manager import load_map
 
 one_hot_node_type_encoder = {
+    "undefined": np.array([0, 0, 0]),
     "tile": np.array([1, 0, 0]),
     "vortex": np.array([0, 1, 0]),
     "wall": np.array([0, 0, 1])
@@ -46,9 +48,15 @@ def grid_to_one_hot(grid):
     return np.array(one_hot_grid)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, grid: list, detection_distance: int, initial_orientation: str = "up"):
-        super().__init__(grid, detection_distance, initial_orientation)
-        self.grid = grid
+    def __init__(self, maps_dir:str, detection_distance: int, initial_orientation: str = "up", max_step_n: int = 1000):
+        self.max_step_n = max_step_n
+        self.maps_dir = maps_dir
+        self.map_count = len(os.listdir(maps_dir))
+        self.current_map_number = 0
+        self.current_step_n = 0
+        self.grid = self.get_current_map()
+        super().__init__(self.grid, detection_distance, initial_orientation)
+
         self.initial_orientation = initial_orientation
 
         # Action space
@@ -64,33 +72,48 @@ class Maze_Environment(Maze_Game, gym.Env):
             3: "right"
         }
 
+    def get_current_map(self):
+        return load_map(os.path.join(self.maps_dir, "map_" + str(self.current_map_number) + ".map"))
+
     def step(self, action):
+        self.current_step_n += 1
         valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
         state = grid_to_one_hot(discovered_grid)
 
         # TODO take map size into account when calculating reward
         # TODO take distance to start into account when calculating reward
-        ther_reward = 1  * (0.999 ** actual_time)
+        
         if self.finished():
-            reward = ther_reward
+            reward = 100
         elif not valid_movement:
-            reward = -1
+            reward = -10
         else:
-            reward = 0
+            reward = -1
 
-        done = self.finished()
-
-        print("actual time:", actual_time)
-        print("Theoretical reward: {}".format(ther_reward))
+        done = self.finished() or self.current_step_n >= self.max_step_n
 
         return state, reward, done, {}
     
     def reset(self):
+        self.current_step_n = 0
+        if self.current_map_number >= self.map_count:
+            self.current_map_number = 0
+        self.current_map_number += 1
+        self.grid = self.get_current_map()
         discovered_grid = self.reset_game(self.grid, self.initial_orientation)
+
         return grid_to_one_hot(discovered_grid)
     
-    def render(self):
+    def clear(self):
+        if os.name == "nt":
+            _ = os.system('cls')
+        else:
+            _ = os.system('clear')
+
+    def render(self, mode='human'):
+        self.clear()
         self.print_grid()
+
 
 
 def main():
