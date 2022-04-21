@@ -61,7 +61,7 @@ class Node():
             if self.tile_type == "hole":
                 return "\033[0m  "+ "\033[0m"
             if self.tile_type == "swamp":
-                return "\033[1;33;47m██"+ "\033[0m"
+                return "\033[1;33;40m██"+ "\033[0m"
             if self.tile_type == "checkpoint":
                 return "\033[0m██"+ "\033[0m"
             if self.tile_type == "connection1-3":
@@ -105,11 +105,11 @@ if __name__ == "__main__":
 
     grid = make_grid((11, 11))
 
-    grid[0][0].tile_type = "start"
+    grid[1][1].tile_type = "swamp"
 
     for row in grid:
         for val in row:
-            print(val.get_representation()[2], end=" ")
+            print(val, end="")
         
         print("\n", end="")
 
