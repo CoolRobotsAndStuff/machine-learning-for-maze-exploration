@@ -3,7 +3,7 @@ import os
 import gym
 from game import Maze_Game
 import json_loader
-from maze_explorer.map_manager import load_map
+from map_manager import load_map
 
 one_hot_node_type_encoder = {
     "undefined": np.array([0, 0, 0]),

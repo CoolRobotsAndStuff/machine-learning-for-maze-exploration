@@ -6,7 +6,7 @@ from tensorflow.keras.optimizers import Adam
 from rl.agents.dqn import DQNAgent
 from rl.policy import EpsGreedyQPolicy
 from rl.memory import SequentialMemory
-from maze_explorer.map_manager import load_map
+from map_manager import load_map
 import time
 
 
