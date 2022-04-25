@@ -340,6 +340,7 @@ def fill_start(areas, connection_grid, grid):
             for adjacent in adj:
                 grid[adjacent[1]][adjacent[0]].tile_type = "start"
             break
+    return start_node
     
 # Fills the walls in the borders between areas
 def fill_walls_around_limits(grid, connection_grid):
@@ -1128,7 +1129,7 @@ def generate_map(visualize=True):
 
             fill_connections(grid, connections_grid)
 
-            fill_start(areas, connections_grid, grid)
+            start_node = fill_start(areas, connections_grid, grid)
 
             fill_walls_around_limits(grid, connections_grid)
 
@@ -1206,7 +1207,7 @@ def generate_map(visualize=True):
 
     accesible_vortex_n = get_area_accesibility(grid, mask_no_tiles_3, 1) + get_area_accesibility(grid, mask_no_tiles_3, 2) + get_area_accesibility(grid, mask_no_tiles_3, 3) 
 
-    map_data = {"shape": (shape_x, shape_y), "accesible_vortex_n": accesible_vortex_n}
+    map_data = {"shape": (shape_x, shape_y), "accesible_vortex_n": accesible_vortex_n, "start_node": (start_node[1], start_node[0])}
 
     return grid, map_data
 

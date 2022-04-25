@@ -54,8 +54,11 @@ class Maze_Environment(Maze_Game, gym.Env):
         self.map_count = len(os.listdir(maps_dir))
         self.current_map_number = 0
         self.current_step_n = 0
-        self.grid = self.get_current_map()
-        super().__init__(self.grid, detection_distance, initial_orientation)
+        self.reward_factor = 10
+        
+        self.grid, map_data = self.get_current_map()
+        self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
+        super().__init__(self.grid, detection_distance, map_data["start_node"], initial_orientation)
 
         self.initial_orientation = initial_orientation
 
@@ -99,8 +102,9 @@ class Maze_Environment(Maze_Game, gym.Env):
         if self.current_map_number >= self.map_count:
             self.current_map_number = 0
         self.current_map_number += 1
-        self.grid = self.get_current_map()
-        discovered_grid = self.reset_game(self.grid, self.initial_orientation)
+        self.grid, map_data = self.get_current_map()
+        self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
+        discovered_grid = self.reset_game(self.grid, map_data["start_node"], self.initial_orientation)
 
         return grid_to_one_hot(discovered_grid)
     
