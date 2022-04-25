@@ -1198,16 +1198,23 @@ def generate_map(visualize=True):
 
     grid = copy.deepcopy(wall_grid)
     
+    mask_no_tiles_3 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+    if visualize:
+        print_area_grid(mask_no_tiles_3)
 
     grid = normalize_to_size(grid, (MAX_SIZE, MAX_SIZE))
 
-    return grid
+    accesible_vortex_n = get_area_accesibility(grid, mask_no_tiles_3, 1) + get_area_accesibility(grid, mask_no_tiles_3, 2) + get_area_accesibility(grid, mask_no_tiles_3, 3) 
+
+    map_data = {"shape": (shape_x, shape_y), "accesible_vortex_n": accesible_vortex_n}
+
+    return grid, map_data
 
 
 
 
 if __name__ == "__main__":
-    grid = generate_map(visualize=False)
+    grid, map_data = generate_map(visualize=False)
     print_grid(grid)
 
 
