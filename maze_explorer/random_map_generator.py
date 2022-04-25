@@ -440,6 +440,21 @@ def get_valid_adjacents(pos, grid, invalid_tile_types=[]):
             if v_tile_type in invalid_tile_types:
                 is_valid = False
                 #print("NOT VALID FOR INVALID TILES")
+
+        adjacents = list(utils.get_adjacents(f_adjacent, include_straight=True, include_diagonals=True))
+        adjacents += list(utils.get_adjacents(m_adjacent, include_straight=True, include_diagonals=True))
+        for adj in adjacents:
+            if adj[0] < 0 or adj[0] >= len(grid[0]) or adj[1] < 0 or adj[1] >= len(grid):
+                continue
+            if grid[adj[1]][adj[0]].tile_type == "hole":
+                is_valid = False
+                #print("INVALID BECAUSE HOLE")
+                break
+            if grid[adj[1]][adj[0]].status == "occupied":
+                is_valid = False
+                #print("INVALID BECAUSE OCCUPIED")
+                break
+
         if is_valid:
             valid_adjacents.append(f_adjacent)
 
@@ -977,6 +992,57 @@ def dot_2_3_limits(grid, mask):
             new_status = random.choice(["occupied", "not_occupied"])
             grid[limit[1]][limit[0]].status = new_status
 
+def generate_holes(grid, mask):
+
+    ratio = 0.05
+
+    possible_verticies = []
+    for y, row in enumerate(grid):
+        for x, node in enumerate(row):
+            if node.node_type == "vortex" and (y - 2) % 4 == 0 and (x - 2)  % 4 == 0:
+                if mask[y][x] != 0:
+                    possible_verticies.append((x, y))
+    
+    while True:
+        hole_grid = copy.deepcopy(grid)
+        amount_of_holes = random.randint(0, round(len(possible_verticies) * ratio))
+        holes = random.sample(possible_verticies, amount_of_holes)
+        for hole in holes:
+            adjacents = list(utils.get_adjacents(hole, include_straight=False, include_diagonals=True))
+            for adjacent in adjacents:
+                if adjacent[0] < 0 or adjacent[0] >= len(grid[0]) or adjacent[1] < 0 or adjacent[1] >= len(grid):
+                    continue
+                if grid[adjacent[1]][adjacent[0]].node_type == "tile":
+                    hole_grid[adjacent[1]][adjacent[0]].tile_type = "hole"
+        
+        traversable = check_area_traversability(2, hole_grid) and check_area_traversability(3, hole_grid) and check_area_traversability(1, hole_grid)
+        accesible = check_area_accesibilty(hole_grid, mask, 1), check_area_accesibilty(hole_grid, mask, 2), check_area_accesibilty(hole_grid, mask, 3)
+
+        if accesible and traversable:
+            return hole_grid
+
+def generate_obstacles(grid, mask):
+    ratio = 0.05
+    ratio2 = 0.01
+    possible_obstacles = []
+    for y, row in enumerate(mask):
+        for x, node in enumerate(row):
+            if node != 0:
+                possible_obstacles.append((x, y))
+    while True:
+        obstacle_grid = copy.deepcopy(grid)
+        amount_of_obstacles = random.randint(0, round(len(possible_obstacles) * ratio))
+        if amount_of_obstacles > 3:
+            amount_of_obstacles = min(amount_of_obstacles, round(len(possible_obstacles) * ratio2))
+        obstacles = random.sample(possible_obstacles, amount_of_obstacles)
+        for obstacle in obstacles:
+            obstacle_grid[obstacle[1]][obstacle[0]].status = "occupied"
+        traversable = check_area_traversability(2, obstacle_grid) and check_area_traversability(3, obstacle_grid) and check_area_traversability(1, obstacle_grid)
+        accesible = check_area_accesibilty(obstacle_grid, mask, 1), check_area_accesibilty(obstacle_grid, mask, 2), check_area_accesibilty(obstacle_grid, mask, 3)
+        if accesible and traversable:
+            return obstacle_grid
+        
+
 def normalize_to_size(grid, final_shape):
     new_grid = []
     for y, row in enumerate(grid):
@@ -990,6 +1056,7 @@ def normalize_to_size(grid, final_shape):
         while len(row) <= final_shape[0]:
             row.append(Node("undefined", "undefined", "undefined"))
     return new_grid
+
             
 MAX_SIZE = 32
 MIN_SIZE = 12
@@ -1112,12 +1179,17 @@ def generate_map(visualize=True):
     if visualize:
         print_area_grid(mask)
 
+    grid = generate_holes(grid, mask)
+    grid = generate_obstacles(grid, mask)
+
     mask_no_tiles_2 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
+
+    
 
     #print_area_grid(only_limits_mask)
     dot_2_3_limits(grid, only_limits_mask)
 
-
+    
     wall_grid = fill_walls_area_2(grid, mask_no_tiles_2, mask)
 
     wall_grid = fill_walls_area_3(wall_grid, mask_no_tiles_2, mask)
@@ -1125,21 +1197,14 @@ def generate_map(visualize=True):
     wall_grid = fill_walls_area_1(wall_grid, mask_no_tiles_2, mask)
 
     grid = copy.deepcopy(wall_grid)
+    
 
     grid = normalize_to_size(grid, (MAX_SIZE, MAX_SIZE))
 
     return grid
 
 
-"""
-fill_obstacles_area_1()
 
-fill_obstacles_area_2()
-
-fill_obstacles_area3()
-
-check_area_navegability()
-"""
 
 if __name__ == "__main__":
     grid = generate_map(visualize=False)
