@@ -75,7 +75,7 @@ with mlflow.start_run():
     dqn.compile(Adam(lr=lr), metrics=metrics)
 
     # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot. 
-    history = dqn.fit(env, nb_steps=500, visualize=False, verbose=2)
+    history = dqn.fit(env, nb_steps=300, visualize=False, verbose=2)
 
     mlflow.end_run()
 #dqn.test(env, nb_episodes=5, visualize=True)
