@@ -4,6 +4,7 @@ import gym
 from game import Maze_Game
 import json_loader
 from map_manager import load_map
+import mlflow
 
 one_hot_node_type_encoder = {
     "undefined": np.array([0, 0, 0]),
@@ -55,6 +56,8 @@ class Maze_Environment(Maze_Game, gym.Env):
         self.current_map_number = 0
         self.current_step_n = 0
         self.reward_factor = 10
+
+        self.cummulative_reward = 0
         
         self.grid, map_data = self.get_current_map()
         self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
@@ -92,13 +95,20 @@ class Maze_Environment(Maze_Game, gym.Env):
             reward = -10
         else:
             reward = -1
+        
+        self.cummulative_reward += reward
 
         done = self.finished() or self.current_step_n >= self.max_step_n
+
+        #mlflow.log_metric("reward", reward, step=self.current_step_n)
+        #mlflow.log_metric("commulative_reward", self.cummulative_reward, step=self.current_step_n)
 
         return state, reward, done, {}
     
     def reset(self):
         self.current_step_n = 0
+        self.cummulative_reward = 0
+
         if self.current_map_number >= self.map_count:
             self.current_map_number = 0
         self.current_map_number += 1
