@@ -161,7 +161,7 @@ Si trata de moverse a una posición inválida le damos un reward de -10. Si term
    git clone https://github.com/CoolRobotsAndStuff/keras-rl2-mlflow.git
    ```
    ```
-   cd keras-rl
+   cd keras-rl2-mlflow
    ```
    ```
    pip install .
