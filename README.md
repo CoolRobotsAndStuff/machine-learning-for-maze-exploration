@@ -32,11 +32,11 @@ Creador de laberintos: https://osaka.rcj.cloud/service/editor/simulation/2021
 
 Implementamos un environment de openAI gym y lo intergamos con la versión simplificada.
 
+Implementamos un generador de mapas aleatorio.
+
 Realizamos algunos experimentos simples con machine learning para el problema de cart-pole balancing utilizando AI gym y Stable Baselines 3:
 
 https://github.com/CoolRobotsAndStuff/ai_pendulum_balancing_robot
-
-Pero estamos desorientados en como atacar este problema en específico. Hay mas detalles sobre nuestras dudas en la sección de preguntas.
 
 ## El laberinto
 
@@ -104,14 +104,10 @@ Nuestro espacio de observación es la grilla en sí. La estamos encodeando con o
 
 Nuestro espacio de acción es discreto con cuatro movimientos: "up", "down", "left", "right"
 
-Si trata de moverse a una posición inválida le damos un reward de -1. El reward positivo se lo damos unicamente al terminar la partida, y es inversamente proporcional al tiempo que tardó en explorar el laberinto.
+Si trata de moverse a una posición inválida le damos un reward de -10. Si termina la partida le damos un rewar proporcional a la cantidad de casillas del laberinto. En el resto de los casos le damos un reward de -1 para incentivar qque reccora el laberinto en el menor tiempo posible.
    
 ## Dudas y Preguntas
-   * **¿Qué librerias nos recomendarias para este tipo de problema?** Incursionamos con Stable Baselines 3, pero nuestra investigación nos lleva a pensar que TensorFlow podría ser lo mas apropiado ¿Es así?¿Deberíamos seguir usando AI gym?
-
-   * **¿Qué modelo es conveniente entrenar con respecto a nuestro problema?** Hemos investigado un poco sobre deep Q learning, pero no estamos seguros.
-   
-   * **¿La estructura de memoria que estamos utilizando es la mejor para este tipo de problema o sería mejor utilizar un grafo, por ejemplo?**
+   * **¿Qué librerias nos recomendarias para este tipo de problema?** 
 
 ## Como reproducir pruebas y entorno
 
@@ -156,7 +152,9 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
    Instalar dependencias
 
    ```
+
    python3.8 -m pip install numpy gym tensorflow keras mlflow
+
    ```
    Instalar fremwork de rl para keras integrado con mlflow
    ```
