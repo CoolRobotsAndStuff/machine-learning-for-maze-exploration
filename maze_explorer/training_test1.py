@@ -12,11 +12,17 @@ from rl.memory import SequentialMemory
 from map_manager import load_map
 import time
 
-mlflow.set_tracking_uri("http://localhost:5000")
+srcipt_dir = os.path.dirname(os.path.realpath(__file__))
+
+ip_file_dir = os.path.join(srcipt_dir, 'tracking_uri_IP.txt')
+with open(ip_file_dir, "r") as f:
+    tracking_uri = f.read()
+    print("MLflow tracking server uri set to:", tracking_uri)
+    mlflow.set_tracking_uri(tracking_uri)
 
 with mlflow.start_run():
     
-    srcipt_dir = os.path.dirname(os.path.realpath(__file__))
+    
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 
