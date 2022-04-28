@@ -5,6 +5,7 @@ from grid_maker import Node, make_grid
 import json_loader
 import os
 import utils
+import map_manager
 
 """"
 @grid: la grilla 
@@ -13,15 +14,16 @@ import utils
 @initial_orientation: donde empieza mirando 
 """
 class Maze_Game():
-    def __init__(self, grid:list, detection_distance:int, initial_orientation:str="up"):
+    def __init__(self, grid:list, detection_distance:int, initial_position:tuple, initial_orientation:str="up"):
         # Distance from the center of the robot inside wich the robot will detect things
         self.detection_distance = detection_distance
         
         self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
         self.time_to_move = 1
         self.time_to_turn = 1
+        print("initial_position", initial_position)
 
-        self.reset_game(grid, initial_orientation)
+        self.reset_game(grid, initial_position, initial_orientation)
     
     # Checks if a node is the start vortex
     def is_start_node(self, position):
@@ -35,17 +37,14 @@ class Maze_Game():
         return False
 
     # Resets the game
-    def reset_game(self, grid:list, initial_orientation:str="up"):
+    def reset_game(self, grid:list, initial_position:tuple, initial_orientation:str="up"):
        
-
         self.entire_grid = copy.deepcopy(grid)  # The world
         self.grid_shape = [len(self.entire_grid), len(self.entire_grid[0])]  # The shape of the world
         # The part of the world the robot has discovered so far
         self.dicovered_grid = self.create_discovered(self.entire_grid) 
-        for y, row in enumerate(grid):
-            for x, node in enumerate(row):
-                if self.is_start_node([x,y]):
-                    self.initial_position = [x,y]
+        self.initial_position = initial_position # The initial position of the robot
+        
         self.robot_position = self.initial_position
         self.robot_orientation = initial_orientation
         self.updateMask()  # Makes the robot discover the world aorund it
@@ -255,13 +254,13 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test1.json"
+    rel_path = "test_maps/map_1.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
-    grid = json_loader.grid_from_json(abs_file_path)
+    grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
      
     # Inicializa el juego
-    maze = Maze_Game(grid, 4)
+    maze = Maze_Game(grid, 4, map_data["start_node"])
 
     print("--------------------------------")
     print('Paramoverse ingresar "up", "down", "left" o "right".')

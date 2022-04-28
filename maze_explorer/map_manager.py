@@ -11,12 +11,13 @@ def generate_maps(num_maps):
         map = generate_map(visualize=False)
         with open('/home/ale/ai gym/machine-learning-for-maze-exploration/maze_explorer/test_maps/map_' + str(i) + ".map", 'wb') as map_file:
             pickle.dump(map, map_file)
-        print("Generated " + str(i) + " / " + str(num_maps - 1) + "  -  " + str(round(i/(num_maps - 1)*100)) + "%")
+        print("Generated " + str(i + 1) + " / " + str(num_maps) + "  -  " + str(round(i/(num_maps - 1)*100)) + "%")
 
 def print_map(file):
         with open(file, "rb") as map_file:
-            map = pickle.load(map_file)
+            map, map_data = pickle.load(map_file)
             print_grid(map)
+            print(map_data)
 
 def load_map(file_path):
     with open(file_path, "rb") as map_file:
@@ -25,9 +26,9 @@ def load_map(file_path):
 
 if __name__ == "__main__":
 
-    generate_maps(100)
+    generate_maps(20)
 
-    #print_map('/home/ale/ai gym/machine-learning-for-maze-exploration/maze_explorer/test_maps/map_0.map')
+    #print_map('/home/ale/ai gym/machine-learning-for-maze-exploration/maze_explorer/test_maps/map_2.map')
 
 
     
