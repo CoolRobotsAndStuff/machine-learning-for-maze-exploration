@@ -12,6 +12,7 @@ from rl.memory import SequentialMemory
 from map_manager import load_map
 import time
 
+mlflow.set_tracking_uri("http://localhost:5000")
 
 with mlflow.start_run():
     
