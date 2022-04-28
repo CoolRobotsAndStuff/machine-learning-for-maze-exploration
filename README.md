@@ -153,11 +153,22 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
    ```
    git clone https://github.com/CoolRobotsAndStuff/machine-learning-for-maze-exploration.git
    ```
-   instalar dependencias
+   Instalar dependencias
 
    ```
-   python3.8 -m pip install gym numpy stable-baselines3
+   python3.8 -m pip install numpy gym tensorflow keras mlflow
    ```
+   Instalar fremwork de rl para keras integrado con mlflow
+   ```
+   git clone https://github.com/CoolRobotsAndStuff/keras-rl2-mlflow.git
+   ```
+   ```
+   cd keras-rl
+   ```
+   ```
+   pip install .
+   ```
+
 
    Para correr la versíon simplificada manualmente:
    ```
@@ -166,6 +177,10 @@ Si trata de moverse a una posición inválida le damos un reward de -1. El rewar
    Para correr el environment de gym con un agente aleatorio:
    ```
    python3.8 maze_explorer/environment.py
+   ```
+   Para correr un test de entrenamiento:
+   ```
+   python3 maze_explorer/training_test1.py
    ```
 
 
