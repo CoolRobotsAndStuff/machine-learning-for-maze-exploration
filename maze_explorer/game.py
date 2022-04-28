@@ -140,10 +140,22 @@ class Maze_Game():
         if is_valid:
             is_valid = self.entire_grid[position[0]][position[1]].status != "occupied"
         
+        if self.entire_grid[position[0]][position[1]].tile_type == "hole":
+            is_valid = False
+        
         # Are the walls surrounding the position not occupied
         for adjacent in utils.get_adjacents(position):
             if self.is_in_bounds(adjacent):
                 if self.entire_grid[adjacent[0]][adjacent[1]].status == "occupied":
+                    is_valid = False
+            else:
+                is_valid = False
+        
+        for diag_adj in utils.get_adjacents(position, include_straight = False, include_diagonals=True):
+            if self.is_in_bounds(diag_adj):
+                if self.entire_grid[diag_adj[0]][diag_adj[1]].status == "occupied":
+                    is_valid = False
+                if self.entire_grid[diag_adj[0]][diag_adj[1]].tile_type == "hole":
                     is_valid = False
             else:
                 is_valid = False
