@@ -85,12 +85,10 @@ class Maze_Environment(Maze_Game, gym.Env):
         self.current_step_n += 1
         valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
         state = grid_to_one_hot(discovered_grid)
-
-        # TODO take map size into account when calculating reward
         # TODO take distance to start into account when calculating reward
         
         if self.finished():
-            reward = 100
+            reward = self.final_reward
         elif not valid_movement:
             reward = -10
         else:

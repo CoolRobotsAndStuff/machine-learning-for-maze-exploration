@@ -6,6 +6,7 @@ import json_loader
 import os
 import utils
 import map_manager
+from bresenham import bresenham
 
 """"
 @grid: la grilla 
@@ -18,7 +19,8 @@ class Maze_Game():
         # Distance from the center of the robot inside wich the robot will detect things
         self.detection_distance = detection_distance
         
-        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
+        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]
+                            , "u":[-1,0], "d":[1,0], "r":[0,1], "l":[0,-1]}
         self.time_to_move = 1
         self.time_to_turn = 1
         print("initial_position", initial_position)
@@ -83,6 +85,8 @@ class Maze_Game():
             for node in adjacent_nodes:
                 if node not in visited and node not in queue:
                     queue.append(node)
+        
+        
         return visited_tiles
 
     # Creates an empty grid for the robot to gradually discover
@@ -109,7 +113,34 @@ class Maze_Game():
         for pair in opposites:
             if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return 2 
         else: return 1
+    
+    def updateMask(self):
 
+        #limites alrededor del robot en X
+        min_x = max(self.robot_position[0] - self.detection_distance, 0)
+        max_x = min(self.robot_position[0] + self.detection_distance + 1, self.grid_shape[0])
+        #limites alrededor del robot en Y
+        min_y = max(self.robot_position[1] - self.detection_distance, 0)
+        max_y = min(self.robot_position[1] + self.detection_distance + 1, self.grid_shape[1])
+        
+        for x in range(min_x, max_x):
+            for y in range(min_y, max_y):
+                if utils.get_distance(self.robot_position, (x,y)) >= self.detection_distance:
+                    continue
+                intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], x, y))
+                intermediate.remove((x, y))
+                is_valid = True
+                for intermidiate_point in intermediate:
+                    if self.entire_grid[intermidiate_point[0]][intermidiate_point[1]].status == "occupied":
+                        is_valid = False
+                        break
+                if is_valid:
+                    self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
+                    self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type                    
+        
+                
+                
+    """
     # Makes the robot gradually "discover" the map
     def updateMask(self):
         #limites alrededor del robot en X
@@ -124,6 +155,7 @@ class Maze_Game():
             for y in range(min_y, max_y):
                 self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
                 self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type
+    """
 
     # Is the position in bounds of the grid
     def is_in_bounds(self, position):
@@ -266,7 +298,7 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test_maps/map_1.map"
+    rel_path = "test_maps/map_2.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
