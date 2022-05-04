@@ -64,8 +64,9 @@ class Maze_Game():
         
         self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]
                             , "u":[-1,0], "d":[1,0], "r":[0,1], "l":[0,-1]}
-        self.time_to_move = 1
-        self.time_to_turn = 1
+        self.time_to_move = 0.6
+        self.time_to_turn_90 = 0.928
+        self.time_to_turn_180 = 1.632
         print("initial_position", initial_position)
 
         self.reset_game(grid, initial_position, initial_orientation)
@@ -162,8 +163,8 @@ class Maze_Game():
 
         opposites = (("up", "down"), ("left", "right"))
         for pair in opposites:
-            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return 2 
-        else: return 1
+            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return self.time_to_turn_180
+        else: return self.time_to_turn_90
 
     def is_visible(self, position):
         intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], position[0], position[1]))
@@ -259,11 +260,11 @@ class Maze_Game():
             # Change the robot position
             self.robot_position = new_pos
             # Number of turns to get to new orientation to be able to move in that direction
-            n_turns = self.get_change_in_orientation(self.robot_orientation, move)
+            time_to_turn = self.get_change_in_orientation(self.robot_orientation, move)
             # Set the orientation of the robot
             self.robot_orientation = move
             # Time taken to execute the movement
-            time_taken = self.time_to_move + (self.time_to_turn * n_turns)
+            time_taken = self.time_to_move + time_to_turn
 
             return True, time_taken
         else:
@@ -307,7 +308,7 @@ class Maze_Game():
                 else:
                     node.is_robots_position = False
                 
-        return valid_movement, self.dicovered_grid, self.total_time
+        return valid_movement, self.dicovered_grid, self.total_time, time_taken
 
     def print_status(self):
         print("robot_postion =", self.robot_position)
@@ -370,10 +371,10 @@ if __name__ == "__main__":
             move = input("move: ")
             if move == "exit": break
 
-            valid_move, _, time_taken = maze.step(move)
+            valid_move, _, _, time_taken = maze.step(move)
             if not valid_move:
                 print("invalid movement!")
-            print("Time in run:", time_taken)
+            print("Time taken:", time_taken)
             maze.print_grid()
 
             if maze.finished():
