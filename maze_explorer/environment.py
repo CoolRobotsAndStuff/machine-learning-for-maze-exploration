@@ -46,10 +46,10 @@ def grid_to_one_hot(grid):
         for node in row:
             one_hot_row.append(get_one_hot_form_node(node))
         one_hot_grid.append(one_hot_row)
-    return np.array(one_hot_grid)
+    return np.array(one_hot_grid, dtype=bool)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, maps_dir:str, detection_distance: int, initial_orientation: str = "up", max_step_n: int = 1000):
+    def __init__(self, maps_dir:str, initial_orientation: str = "up", max_step_n: int = 1000):
         self.max_step_n = max_step_n
         self.maps_dir = maps_dir
         self.map_count = len(os.listdir(maps_dir))
@@ -61,14 +61,14 @@ class Maze_Environment(Maze_Game, gym.Env):
         
         self.grid, map_data = self.get_current_map()
         self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
-        super().__init__(self.grid, detection_distance, map_data["start_node"], initial_orientation)
+        super().__init__(self.grid, map_data["start_node"], initial_orientation)
 
         self.initial_orientation = initial_orientation
 
         # Action space
         self.action_space = gym.spaces.Discrete(4)
         # Observation space
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 17), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 17), dtype=bool)
 
         # Converts the output if the model to an action for the game
         self.action_to_str = {
@@ -85,12 +85,10 @@ class Maze_Environment(Maze_Game, gym.Env):
         self.current_step_n += 1
         valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
         state = grid_to_one_hot(discovered_grid)
-
-        # TODO take map size into account when calculating reward
         # TODO take distance to start into account when calculating reward
         
         if self.finished():
-            reward = 100
+            reward = self.final_reward
         elif not valid_movement:
             reward = -10
         else:
@@ -137,7 +135,7 @@ def main():
 
     grid = json_loader.grid_from_json(abs_file_path)
     # Initialize the environment
-    env = Maze_Environment(grid, 4, "up")
+    env = Maze_Environment(grid, "up")
 
     
     for _ in range(10000):
