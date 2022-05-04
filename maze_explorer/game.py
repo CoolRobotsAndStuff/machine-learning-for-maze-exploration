@@ -269,12 +269,18 @@ class Maze_Game():
         else:
             return False, 0
     
+    def is_robot_in_start(self):
+        adjacents = utils.get_adjacents(self.robot_position, include_straight = False, include_diagonals=True)
+        for adjacent in adjacents:
+            if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "start":
+                return True
+    
     # If the robot has explored the entire grid
     def finished(self):
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
         #print("left", self.reacheable - self.explored)
-        return self.reacheable.issubset(self.explored)
+        return self.reacheable.issubset(self.explored) and self.is_robot_in_start()
     
     # Updates the part of the map the robot can see depending on its position
     def update_explored(self):
@@ -344,7 +350,7 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test_maps/map_5.map"
+    rel_path = "test_maps/map_0.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
