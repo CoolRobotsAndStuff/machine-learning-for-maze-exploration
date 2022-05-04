@@ -1087,6 +1087,8 @@ def generate_map(visualize=True):
 
             grid = make_grid((shape_x, shape_y))
 
+            
+
             """
             if (size_x // 4) * (size_y // 4) < 9:
                 n_of_areas = MIN_N_AREAS
@@ -1202,7 +1204,10 @@ def generate_map(visualize=True):
     mask_no_tiles_3 = get_mask_from_grid(grid, area_grid, fill_special_tiles=False)
     if visualize:
         print_area_grid(mask_no_tiles_3)
-
+    for x, row in enumerate(grid):
+            for y, node in enumerate(row):
+                if node.node_type == "tile" and node.tile_type == "undefined":
+                    node.tile_type = "normal"
     grid = normalize_to_size(grid, (MAX_SIZE, MAX_SIZE))
 
     accesible_vortex_n = get_area_accesibility(grid, mask_no_tiles_3, 1) + get_area_accesibility(grid, mask_no_tiles_3, 2) + get_area_accesibility(grid, mask_no_tiles_3, 3) 

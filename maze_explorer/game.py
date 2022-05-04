@@ -10,14 +10,57 @@ from bresenham import bresenham
 
 """"
 @grid: la grilla 
-@detection_distance: distancia a la que detecta cosas
 @initial_position: donde empieza el robot
 @initial_orientation: donde empieza mirando 
 """
 class Maze_Game():
-    def __init__(self, grid:list, detection_distance:int, initial_position:tuple, initial_orientation:str="up"):
+    def __init__(self, grid:list, initial_position:tuple, initial_orientation:str="up"):
         # Distance from the center of the robot inside wich the robot will detect things
-        self.detection_distance = detection_distance
+        self.detection_distance = 4 * 3
+
+        self.color_detection_mask = np.array([
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1],
+            [0, 0, 0,   0,   0, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
+            [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
+
+        ])
+
         
         self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]
                             , "u":[-1,0], "d":[1,0], "r":[0,1], "l":[0,-1]}
@@ -86,8 +129,16 @@ class Maze_Game():
                 if node not in visited and node not in queue:
                     queue.append(node)
         
-        
-        return visited_tiles
+        final_tiles = set()
+        for visited_tile in visited_tiles:
+            adjacents = utils.get_adjacents(visited_tile, include_straight=True, include_diagonals=False)
+            for adjacent in adjacents:
+                if self.entire_grid[adjacent[0]][adjacent[1]].node_type == "wall":
+                    if self.entire_grid[adjacent[0]][adjacent[1]].status == "occupied":
+                        final_tiles.add(visited_tile)
+                        break
+            
+        return final_tiles
 
     # Creates an empty grid for the robot to gradually discover
     # Only leaves the node_type, wich is already known
@@ -113,35 +164,18 @@ class Maze_Game():
         for pair in opposites:
             if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return 2 
         else: return 1
-    
-    def updateMask(self):
 
-        #limites alrededor del robot en X
-        min_x = max(self.robot_position[0] - self.detection_distance, 0)
-        max_x = min(self.robot_position[0] + self.detection_distance + 1, self.grid_shape[0])
-        #limites alrededor del robot en Y
-        min_y = max(self.robot_position[1] - self.detection_distance, 0)
-        max_y = min(self.robot_position[1] + self.detection_distance + 1, self.grid_shape[1])
-        
-        for x in range(min_x, max_x):
-            for y in range(min_y, max_y):
-                if utils.get_distance(self.robot_position, (x,y)) >= self.detection_distance:
-                    continue
-                intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], x, y))
-                intermediate.remove((x, y))
-                is_valid = True
-                for intermidiate_point in intermediate:
-                    if self.entire_grid[intermidiate_point[0]][intermidiate_point[1]].status == "occupied":
-                        is_valid = False
-                        break
-                if is_valid:
-                    self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
-                    self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type                    
-        
-                
-                
-    """
-    # Makes the robot gradually "discover" the map
+    def is_visible(self, position):
+        intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], position[0], position[1]))
+        intermediate.remove(position)
+        is_valid = True
+        for intermidiate_point in intermediate:
+            if self.entire_grid[intermidiate_point[0]][intermidiate_point[1]].status == "occupied":
+                is_valid = False
+                break
+        return is_valid
+
+    
     def updateMask(self):
         #limites alrededor del robot en X
         min_x = max(self.robot_position[0] - self.detection_distance, 0)
@@ -153,9 +187,22 @@ class Maze_Game():
         # añadir al mapa descubierto los nodos dentro del cuadrado
         for x in range(min_x, max_x):
             for y in range(min_y, max_y):
-                self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
-                self.dicovered_grid[x][y].tile_type = self.entire_grid[x][y].tile_type
-    """
+                if utils.get_distance(self.robot_position, (x, y)) <= self.detection_distance:
+                    if self.is_visible((x, y)): 
+                        self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
+
+        center = (self.color_detection_mask.shape[0] // 2, self.color_detection_mask.shape[1] // 2)
+        for x, row in enumerate(self.color_detection_mask):
+            for y, node in enumerate(row):
+                if node == 1:
+                    pos = (self.robot_position[0] + x - center[0], self.robot_position[1] + y - center[1])
+                    if pos[0] < 0 or pos[0] >= self.grid_shape[0] or pos[1] < 0 or pos[1] >= self.grid_shape[1]:
+                        continue
+                    if self.is_visible(pos):
+                        self.dicovered_grid[pos[0]][pos[1]].tile_type = self.entire_grid[pos[0]][pos[1]].tile_type
+                #self.dicovered_grid[x][y].status = self.entire_grid[y][x].status
+        
+
 
     # Is the position in bounds of the grid
     def is_in_bounds(self, position):
@@ -227,7 +274,7 @@ class Maze_Game():
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
         #print("left", self.reacheable - self.explored)
-        return self.reacheable == self.explored
+        return self.reacheable.issubset(self.explored)
     
     # Updates the part of the map the robot can see depending on its position
     def update_explored(self):
@@ -288,7 +335,6 @@ class Maze_Game():
                     print(" ◥", end="")
                 elif y == robot_right[1] and x == robot_down[0]:
                     print("◤ ", end="")
-                
                 else:
                     print(str(value), end="")
             print("\n", end="")
@@ -298,13 +344,13 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test_maps/map_2.map"
+    rel_path = "test_maps/map_5.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
      
     # Inicializa el juego
-    maze = Maze_Game(grid, 4, map_data["start_node"])
+    maze = Maze_Game(grid, map_data["start_node"])
 
     print("--------------------------------")
     print('Paramoverse ingresar "up", "down", "left" o "right".')
@@ -327,55 +373,3 @@ if __name__ == "__main__":
             if maze.finished():
                 print("Finished!")
                 break
-
-
-
-    
-
-        # Just ignore this used for lidar
-"""
-        for x in range(min_x, max_x):
-            for y in range(min_y, max_y):
-                self.disc_mask[x, y] = False
-
-        for x in range(min_x, max_x):
-            for y in range(min_y, max_y):
-                diff_x = self.robot_position[0] - x
-                diff_y = self.robot_position[1] - y
-
-                if diff_x == 0 and diff_y == 0:
-                    self.disc_mask[x, y] = False
-                
-                pos_diff_x = diff_x * -1 if diff_x < 0 else  diff_x
-                pos_diff_y = diff_y * -1 if diff_y < 0 else  diff_y
-                
-                if pos_diff_y < pos_diff_x:
-                    #print(diff_x)
-                    if diff_x <= 0:
-                        for x1 in range(x, self.robot_position[0], -1):
-                            print((x1, y))
-                            self.disc_mask[x1, y] = True
-                            if self.entire_grid[x1, y] == 1:
-                                break
-                              
-                    else:
-                        for x1 in range(x, self.robot_position[0]):
-                            self.disc_mask[x1, y] = True
-                            if self.entire_grid[x1, y] == 1:
-                                break
-                            
-                else:
-                    if diff_y <= 0:
-                        for y1 in range(y, self.robot_position[1], -1):
-                            print((x, y1))
-                            self.disc_mask[x, y1] = True
-                            if self.entire_grid[x, y1] == 1:
-                                break
-                            
-                    else:
-                        for y1 in range(y, self.robot_position[1]):
-                            self.disc_mask[x, y1] = True
-                            if self.entire_grid[x, y1] == 1:
-                                break
-        """
-                

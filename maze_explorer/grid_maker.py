@@ -41,20 +41,24 @@ class Node():
     # Returns a visual representation of the node in ASCII 
     def get_string(self):
         if self.status == "undefined":
-            return "??"
-        elif self.status == "occupied":
+            if not(self.node_type == "tile" and self.tile_type != "undefined"):    
+                return "??"
+
+        if self.status == "occupied":
             return "\033[1;30;40m██" + "\033[0m"
 
         elif self.node_type == "wall":
+            """
             if self.status == "not_occupied":
                 return "\033[1;37;47m██"+ "\033[0m"
-            return "--"
+            """
+            return "\033[1;30;47m||"+ "\033[0m"
         elif self.node_type == "vortex": #vertice
+            """
             if self.status == "not_occupied":
                 return "\033[1;37;47m██"+ "\033[0m"
-                
-            
-            return "<>"
+            """
+            return "\033[1;30;47m<>"+ "\033[0m"
         elif self.node_type == "tile":
             if self.tile_type == "start":
                 return "\033[1;32;47m██"+ "\033[0m"
@@ -70,8 +74,10 @@ class Node():
                 return "\033[1;34;47m██"+ "\033[0m"
             if self.tile_type == "connection2-3":
                 return "\033[1;31;47m██"+ "\033[0m"
+            if self.tile_type == "normal":
+                return "\033[1;37;47m██"+ "\033[0m"
 
-            return "\033[1;37;47m██"+ "\033[0m"
+            return "\033[1;30;47m??"+ "\033[0m"
 
         
     def __str__(self) -> str:

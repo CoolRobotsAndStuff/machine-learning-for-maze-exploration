@@ -26,7 +26,7 @@ with mlflow.start_run():
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 
-    env = Maze_Environment(maps_dir, 4, "up", 100)
+    env = Maze_Environment(maps_dir, "up", 100)
 
     nb_actions = env.action_space.n
 

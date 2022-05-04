@@ -49,7 +49,7 @@ def grid_to_one_hot(grid):
     return np.array(one_hot_grid)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, maps_dir:str, detection_distance: int, initial_orientation: str = "up", max_step_n: int = 1000):
+    def __init__(self, maps_dir:str, initial_orientation: str = "up", max_step_n: int = 1000):
         self.max_step_n = max_step_n
         self.maps_dir = maps_dir
         self.map_count = len(os.listdir(maps_dir))
@@ -61,7 +61,7 @@ class Maze_Environment(Maze_Game, gym.Env):
         
         self.grid, map_data = self.get_current_map()
         self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
-        super().__init__(self.grid, detection_distance, map_data["start_node"], initial_orientation)
+        super().__init__(self.grid, map_data["start_node"], initial_orientation)
 
         self.initial_orientation = initial_orientation
 
@@ -135,7 +135,7 @@ def main():
 
     grid = json_loader.grid_from_json(abs_file_path)
     # Initialize the environment
-    env = Maze_Environment(grid, 4, "up")
+    env = Maze_Environment(grid, "up")
 
     
     for _ in range(10000):
