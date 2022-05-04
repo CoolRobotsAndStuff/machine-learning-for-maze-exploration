@@ -46,7 +46,7 @@ def grid_to_one_hot(grid):
         for node in row:
             one_hot_row.append(get_one_hot_form_node(node))
         one_hot_grid.append(one_hot_row)
-    return np.array(one_hot_grid)
+    return np.array(one_hot_grid, dtype=bool)
 
 class Maze_Environment(Maze_Game, gym.Env):
     def __init__(self, maps_dir:str, initial_orientation: str = "up", max_step_n: int = 1000):
@@ -68,7 +68,7 @@ class Maze_Environment(Maze_Game, gym.Env):
         # Action space
         self.action_space = gym.spaces.Discrete(4)
         # Observation space
-        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 17), dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=0, high=1, shape=(len(self.entire_grid), len(self.entire_grid[0]), 17), dtype=bool)
 
         # Converts the output if the model to an action for the game
         self.action_to_str = {

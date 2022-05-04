@@ -26,7 +26,7 @@ with mlflow.start_run():
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 
-    env = Maze_Environment(maps_dir, "up", 100)
+    env = Maze_Environment(maps_dir, "up", 1000)
 
     nb_actions = env.action_space.n
 
@@ -82,7 +82,7 @@ with mlflow.start_run():
     dqn.compile(Adam(lr=lr), metrics=metrics)
 
     # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot. 
-    history = dqn.fit(env, nb_steps=300, visualize=False, verbose=2)
+    history = dqn.fit(env, nb_steps=100000, visualize=False, verbose=2)
 
     mlflow.end_run()
 #dqn.test(env, nb_episodes=5, visualize=True)
