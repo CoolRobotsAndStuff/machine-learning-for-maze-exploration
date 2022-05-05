@@ -12,6 +12,8 @@ from rl.memory import SequentialMemory
 from map_manager import load_map
 import time
 
+from pathlib import Path
+
 srcipt_dir = os.path.dirname(os.path.realpath(__file__))
 
 ip_file_dir = os.path.join(srcipt_dir, 'tracking_uri_IP.txt')
@@ -26,7 +28,7 @@ with mlflow.start_run():
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 
-    env = Maze_Environment(maps_dir, "up", 1000)
+    env = Maze_Environment(maps_dir, "up", 100)
 
     nb_actions = env.action_space.n
 
@@ -82,7 +84,13 @@ with mlflow.start_run():
     dqn.compile(Adam(lr=lr), metrics=metrics)
 
     # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot. 
-    history = dqn.fit(env, nb_steps=100000, visualize=False, verbose=2)
+    history = dqn.fit(env, nb_steps=300, visualize=False, verbose=2)
+
+    weight_path = Path('saved_agents')
+    weight_path.mkdir(parents=True, exist_ok=True)
+    dqn.save_weights(str(weight_path / 'dqn_keras-RL2.hdf5'), overwrite=True)
+
+    mlflow.log_artifact(str(weight_path / 'dqn_keras-RL2.hdf5'))
 
     mlflow.end_run()
 #dqn.test(env, nb_episodes=5, visualize=True)
