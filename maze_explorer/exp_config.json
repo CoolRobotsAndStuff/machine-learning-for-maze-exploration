@@ -1,0 +1,21 @@
+{   
+    "server_URI": "http://localhost:5000",
+    "bucket_URI": "gcs://bucket-name",
+    "name":"",
+    "runs":
+    [
+        {
+        "conv_layers": [{"filter_n": 0, "size":[0, 0], "strides":1, "activation":"relu"}],
+        "dense_layers": [{"units": 0, "activation":"relu"}],
+        "policy": "",
+        "maxs_steps_in_episode": 1000,
+        "memory": "SequentialMemory", 
+        "memory_limit":50000, 
+        "memory_window_lenght":1,
+        "warmup_steps":1000,
+        "learning_rate":0.001,
+        "target_model_update":1e-2
+        },
+
+    ]
+}
