@@ -1,5 +1,6 @@
 import random
-from grid_maker import make_grid, Node
+from grid_maker import make_grid
+from grid_node import Node
 import utils
 import numpy as np
 import copy

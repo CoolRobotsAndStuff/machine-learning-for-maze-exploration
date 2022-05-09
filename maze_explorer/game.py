@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.ma as ma
 import copy
-from grid_maker import Node, make_grid
 import json_loader
 import os
 import utils
