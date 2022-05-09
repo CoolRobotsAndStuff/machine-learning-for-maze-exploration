@@ -3,7 +3,7 @@ import mlflow
 import os
 from environment import Maze_Environment
 from keras.models import Sequential
-from keras.layers import Dense, Activation, Flatten
+from keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
 from tensorflow.keras.optimizers import Adam
 
 from rl.agents.dqn import DQNAgent
@@ -24,7 +24,6 @@ with open(ip_file_dir, "r") as f:
 
 with mlflow.start_run(experiment_id=1):
     
-
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 
     env = Maze_Environment(maps_dir, "up", 100)
@@ -35,6 +34,20 @@ with mlflow.start_run(experiment_id=1):
 
     model = Sequential()
     model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+
+    input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
+    # Build Conv2D model
+    model = Sequential()
+    model.add(Permute((2, 3, 1), input_shape=input_shape))
+    model.add(Convolution2D(32, (8, 8), strides=(1, 1), activation='relu'))
+    model.add(Convolution2D(64, (4, 4), strides=(1, 1), activation='relu'))
+    model.add(Convolution2D(64, (3, 3), strides=(1, 1), activation='relu'))
+    model.add(Flatten())
+    model.add(Dense(512, activation='relu'))
+    # Last layer: no. of neurons corresponds to action space
+    # Linear activation
+    model.add(Dense(nb_actions, activation='linear'))  
+    print(model.summary())
 
     for layer in dense_layers:
         model.add(Dense(layer["size"]))
@@ -83,18 +96,13 @@ with mlflow.start_run(experiment_id=1):
     dqn.compile(Adam(lr=lr), metrics=metrics)
 
     # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot. 
-    history = dqn.fit(env, nb_steps=300, visualize=True, verbose=2)
+    history = dqn.fit(env, nb_steps=300, visualize=False, verbose=2)
 
     weight_path = Path('saved_agents')
     weight_path.mkdir(parents=True, exist_ok=True)
-    
-    model_json = dqn.model.to_json()
-    with open(os.path.join(weight_path, "dqn_keras-RL2-model.json"), "w") as json_file:
-        json_file.write(model_json)
-    mlflow.log_artifact(os.path.join(weight_path, "dqn_keras-RL2-model.json"))
-    
-    dqn.save_weights(str(weight_path / 'dqn_keras-RL2-weights.hdf5'), overwrite=True)
-    mlflow.log_artifact(str(weight_path / 'dqn_keras-RL2-weights.hdf5'))
+    dqn.save_weights(str(weight_path / 'dqn_keras-RL2.hdf5'), overwrite=True)
+
+    mlflow.log_artifact(str(weight_path / 'dqn_keras-RL2.hdf5'))
 
     mlflow.end_run()
 #dqn.test(env, nb_episodes=5, visualize=True)
