@@ -1,7 +1,6 @@
 import numpy as np
 import numpy.ma as ma
 import copy
-from grid_maker import Node, make_grid
 import json_loader
 import os
 import utils
@@ -18,6 +17,7 @@ class Maze_Game():
         # Distance from the center of the robot inside wich the robot will detect things
         self.detection_distance = 4 * 3
 
+        # The tiles of wich the robot can see the color.
         self.color_detection_mask = np.array([
             [0, 0, 0,   0,   0, 0, 0,   0,   1, 0, 1,   0,   1, 0, 1,   0,   1, 0, 1,   0,   0, 0, 0,   0,   0, 0, 0],
             [0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0,   0,   0, 0, 0],
@@ -61,11 +61,30 @@ class Maze_Game():
 
         ])
 
+        # The directions in which the robot can move
+        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
+
+        # Abreviations for the directions
+        self.abreviations= {"u":"up", "d":"down", "r":"right", "l":"left"}
+
         
-        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]
-                            , "u":[-1,0], "d":[1,0], "r":[0,1], "l":[0,-1]}
-        self.time_to_move = 1
-        self.time_to_turn = 1
+        self.time_to_move = 0.6  # Time to move one tile in a straight line in a normal tile
+        self.time_to_turn_90 = 0.928 # Time to turn 90 degrees in a normal tile
+        self.time_to_turn_180 = 1.632 # Time to turn 180 degrees in a normal tile
+
+        # Times to move in a stright line in a swamp tile
+        self.swamp_times = {
+            1: 0.66,
+            2: 1.626,
+        }
+
+        # Times to turn in a swamp tile
+        self.swamp_turn_times = {
+            4: {90:1.1676, 180:2.3375},
+            2: {90:(1.1676 * 0.50) + (self.time_to_turn_90 * 0.50), 180:(2.3375 * 0.50) + (self.time_to_turn_180 * 0.50)},
+            1: {90:(1.1676 * 0.25) + (self.time_to_turn_90 * 0.75), 180:(2.3375 * 0.25) + (self.time_to_turn_180 * 0.75)},
+            }
+
         print("initial_position", initial_position)
 
         self.reset_game(grid, initial_position, initial_orientation)
@@ -157,14 +176,34 @@ class Maze_Game():
 
     # Returns number of 90 deg turns to face in new orientation
     def get_change_in_orientation(self, initial_or, new_or):
+
+        # Counts the number of swamp tiles adjacent to the actual position
+        adj_tiles = utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True)
+
+        swamp_n = 0
+
+        for tile in adj_tiles:
+            if self.entire_grid[tile[0]][tile[1]].node_type == "tile":
+                if self.entire_grid[tile[0]][tile[1]].tile_type == "swamp":
+                    swamp_n += 1
+
         if initial_or == new_or:
             return 0
 
         opposites = (("up", "down"), ("left", "right"))
         for pair in opposites:
-            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return 2 
-        else: return 1
+            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: 
+                if swamp_n == 0:
+                    return self.time_to_turn_180
+                else:
+                    return self.swamp_turn_times[swamp_n][180]
+        else:
+            if swamp_n == 0:
+                return self.time_to_turn_90
+            else:
+                return self.swamp_turn_times[swamp_n][90]
 
+    # Checks if a position is visible from the robot using the bresenham line algorithm
     def is_visible(self, position):
         intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], position[0], position[1]))
         intermediate.remove(position)
@@ -175,22 +214,23 @@ class Maze_Game():
                 break
         return is_valid
 
-    
+    # Makes the robot discover the world around it
     def updateMask(self):
-        #limites alrededor del robot en X
+        # Limits around the robot in X
         min_x = max(self.robot_position[0] - self.detection_distance, 0)
         max_x = min(self.robot_position[0] + self.detection_distance + 1, self.grid_shape[0])
-        #limites alrededor del robot en Y
+        # Limits around the robot in Y
         min_y = max(self.robot_position[1] - self.detection_distance, 0)
         max_y = min(self.robot_position[1] + self.detection_distance + 1, self.grid_shape[1])
         
-        # añadir al mapa descubierto los nodos dentro del cuadrado
+        # Adds the lidar detections to the discovered map
         for x in range(min_x, max_x):
             for y in range(min_y, max_y):
                 if utils.get_distance(self.robot_position, (x, y)) <= self.detection_distance:
                     if self.is_visible((x, y)): 
                         self.dicovered_grid[x][y].status = self.entire_grid[x][y].status
 
+        # Adds the color detections to the discovered map
         center = (self.color_detection_mask.shape[0] // 2, self.color_detection_mask.shape[1] // 2)
         for x, row in enumerate(self.color_detection_mask):
             for y, node in enumerate(row):
@@ -201,7 +241,6 @@ class Maze_Game():
                     if self.is_visible(pos):
                         self.dicovered_grid[pos[0]][pos[1]].tile_type = self.entire_grid[pos[0]][pos[1]].tile_type
                 #self.dicovered_grid[x][y].status = self.entire_grid[y][x].status
-        
 
 
     # Is the position in bounds of the grid
@@ -230,6 +269,7 @@ class Maze_Game():
             else:
                 is_valid = False
         
+        # Is the position not occupied and not a hole
         for diag_adj in utils.get_adjacents(position, include_straight = False, include_diagonals=True):
             if self.is_in_bounds(diag_adj):
                 if self.entire_grid[diag_adj[0]][diag_adj[1]].status == "occupied":
@@ -254,29 +294,55 @@ class Maze_Game():
 
     # Executes a movement. Returns if the movement was valid and the time taken to do it.
     def move(self, move:str):
+
+        # If an abreviation is given, convert it to the full direction
+        if move not in self.directions.keys():
+            if move in self.abreviations.keys():
+                move = self.abreviations[move]
+
         if self.is_valid_move(self.robot_position, move):
             new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
+            intermediate_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
             # Change the robot position
             self.robot_position = new_pos
-            # Number of turns to get to new orientation to be able to move in that direction
-            n_turns = self.get_change_in_orientation(self.robot_orientation, move)
+
+            # Checks the amount of swampp tiles the robot will have to traverse
+            adjacents = utils.get_adjacents(intermediate_pos)
+            n_swamps = 0
+            for adjacent in adjacents:
+                if not self.is_in_bounds(adjacent):
+                    continue
+                if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "swamp":
+                    n_swamps += 1
+
+            # Time necessary to turn to get to new orientation to be able to move in that direction
+            time_to_turn = self.get_change_in_orientation(self.robot_orientation, move)
             # Set the orientation of the robot
             self.robot_orientation = move
             # Time taken to execute the movement
-            time_taken = self.time_to_move + (self.time_to_turn * n_turns)
+            if n_swamps > 0:
+                time_taken = self.swamp_times[n_swamps] + time_to_turn
+            else:
+                time_taken = self.time_to_move + time_to_turn
 
             return True, time_taken
         else:
             return False, 0
     
-    # If the robot has explored the entire grid
+    def is_robot_in_start(self):
+        adjacents = utils.get_adjacents(self.robot_position, include_straight = False, include_diagonals=True)
+        for adjacent in adjacents:
+            if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "start":
+                return True
+    
+    # If the robot has explored the required part of the maze and gone back to the start
     def finished(self):
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
         #print("left", self.reacheable - self.explored)
-        return self.reacheable.issubset(self.explored)
+        return self.reacheable.issubset(self.explored) and self.is_robot_in_start()
     
-    # Updates the part of the map the robot can see depending on its position
+    # Saves the parts of the map the robot has passed trough
     def update_explored(self):
 
         for adj in utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True):
@@ -288,7 +354,7 @@ class Maze_Game():
         
         self.entire_grid[self.robot_position[0]][self.robot_position[1]].explored = True
 
-    # Runs a movement, returns if it was a valid one, the discovered grid and the time taken to do the movement
+    # Runs a movement, returns if it was a valid one, the discovered grid, the time in the run and the time taken to do the movement
     def step(self, movement):
         valid_movement, time_taken = self.move(movement)
         self.updateMask()
@@ -301,7 +367,7 @@ class Maze_Game():
                 else:
                     node.is_robots_position = False
                 
-        return valid_movement, self.dicovered_grid, self.total_time
+        return valid_movement, self.dicovered_grid, self.total_time, time_taken
 
     def print_status(self):
         print("robot_postion =", self.robot_position)
@@ -318,15 +384,34 @@ class Maze_Game():
         for x, row in enumerate(self.dicovered_grid):
             for y, value in enumerate(row):
                 if [x, y] == self.robot_position:
-                    print("ob", end="")
+                    if self.robot_orientation == "up":
+                        print("↑ ", end="")
+                    elif self.robot_orientation == "down":
+                        print("↓ ", end="")
+                    elif self.robot_orientation == "left":
+                        print("<-", end="")
+                    elif self.robot_orientation == "right":
+                        print("->", end="")
                 elif [x, y] == robot_right:
-                    print(".|", end="")
+                    if self.robot_orientation == "up" or self.robot_orientation == "down":
+                        print(" █", end="")
+                    else:
+                        print(" |", end="")
                 elif [x, y] == robot_left:
-                    print("|R", end="")
+                    if self.robot_orientation == "up" or self.robot_orientation == "down":
+                        print("█ ", end="")
+                    else:
+                        print("| ", end="")
                 elif [x, y] == robot_up:
-                    print("──", end="")
+                    if self.robot_orientation == "left" or self.robot_orientation == "right":
+                        print("▀▀", end="")
+                    else:
+                        print("──", end="")
                 elif [x, y] == robot_down:
-                    print("──", end="")
+                    if self.robot_orientation == "left" or self.robot_orientation == "right":
+                        print("▄▄", end="")
+                    else:
+                        print("──", end="")
                 elif y == robot_right[1] and x == robot_up[0]:
                     print("◣ ", end="")
                 elif y == robot_left[1] and x == robot_up[0]:
@@ -344,7 +429,7 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test_maps/map_5.map"
+    rel_path = "test_maps/map_2.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
@@ -364,10 +449,10 @@ if __name__ == "__main__":
             move = input("move: ")
             if move == "exit": break
 
-            valid_move, _, time_taken = maze.step(move)
+            valid_move, _, _, time_taken = maze.step(move)
             if not valid_move:
                 print("invalid movement!")
-            print("Time in run:", time_taken)
+            print("Time taken:", time_taken)
             maze.print_grid()
 
             if maze.finished():

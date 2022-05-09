@@ -22,7 +22,6 @@ with open(ip_file_dir, "r") as f:
 
 with mlflow.start_run():
     
-    
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
 

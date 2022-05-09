@@ -83,7 +83,7 @@ class Maze_Environment(Maze_Game, gym.Env):
 
     def step(self, action):
         self.current_step_n += 1
-        valid_movement, discovered_grid, actual_time = super().step(self.action_to_str[action])
+        valid_movement, discovered_grid, actual_time, time_taken = super().step(self.action_to_str[action])
         state = grid_to_one_hot(discovered_grid)
         # TODO take distance to start into account when calculating reward
         
@@ -97,9 +97,6 @@ class Maze_Environment(Maze_Game, gym.Env):
         self.cummulative_reward += reward
 
         done = self.finished() or self.current_step_n >= self.max_step_n
-
-        #mlflow.log_metric("reward", reward, step=self.current_step_n)
-        #mlflow.log_metric("commulative_reward", self.cummulative_reward, step=self.current_step_n)
 
         return state, reward, done, {}
     
@@ -130,19 +127,16 @@ class Maze_Environment(Maze_Game, gym.Env):
 
 def main():
     script_dir = os.path.dirname(__file__)
-    rel_path = "test1.json"
-    abs_file_path = os.path.join(script_dir, rel_path)
-
-    grid = json_loader.grid_from_json(abs_file_path)
+    maps_dir = os.path.join(script_dir, "test_maps")
     # Initialize the environment
-    env = Maze_Environment(grid, "up")
+    env = Maze_Environment(maps_dir, "up")
 
     
     for _ in range(10000):
         state, reward, done, _ = env.step(env.action_space.sample()) # take a random action
         env.render()
         if done:
-            print("Explored the entire maze!")
+            print("Explored the entire maze or reached the maximum number of steps")
             break
     
     
