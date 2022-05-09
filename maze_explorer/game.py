@@ -62,11 +62,25 @@ class Maze_Game():
         ])
 
         
-        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]
-                            , "u":[-1,0], "d":[1,0], "r":[0,1], "l":[0,-1]}
+        self.directions = {"up":[-1,0], "down":[1,0], "right":[0,1], "left":[0,-1]}
+
+        self.abreviations= {"u":"up", "d":"down", "r":"right", "l":"left"}
+
         self.time_to_move = 0.6
         self.time_to_turn_90 = 0.928
         self.time_to_turn_180 = 1.632
+
+        self.swamp_times = {
+            1: 0.66,
+            2: 1.626,
+        }
+
+        self.swamp_turn_times = {
+            4: {90:1.1676, 180:2.3375},
+            2: {90:(1.1676 * 0.50) + (self.time_to_turn_90 * 0.50), 180:(2.3375 * 0.50) + (self.time_to_turn_180 * 0.50)},
+            1: {90:(1.1676 * 0.25) + (self.time_to_turn_90 * 0.75), 180:(2.3375 * 0.25) + (self.time_to_turn_180 * 0.75)},
+            }
+
         print("initial_position", initial_position)
 
         self.reset_game(grid, initial_position, initial_orientation)
@@ -158,13 +172,31 @@ class Maze_Game():
 
     # Returns number of 90 deg turns to face in new orientation
     def get_change_in_orientation(self, initial_or, new_or):
+
+        adj_tiles = utils.get_adjacents(self.robot_position, include_straight=False, include_diagonals=True)
+
+        swamp_n = 0
+
+        for tile in adj_tiles:
+            if self.entire_grid[tile[0]][tile[1]].node_type == "tile":
+                if self.entire_grid[tile[0]][tile[1]].tile_type == "swamp":
+                    swamp_n += 1
+
         if initial_or == new_or:
             return 0
 
         opposites = (("up", "down"), ("left", "right"))
         for pair in opposites:
-            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: return self.time_to_turn_180
-        else: return self.time_to_turn_90
+            if (initial_or, new_or) == pair or (new_or, initial_or) == pair: 
+                if swamp_n == 0:
+                    return self.time_to_turn_180
+                else:
+                    return self.swamp_turn_times[swamp_n][180]
+        else:
+            if swamp_n == 0:
+                return self.time_to_turn_90
+            else:
+                return self.swamp_turn_times[swamp_n][90]
 
     def is_visible(self, position):
         intermediate = list(bresenham(self.robot_position[0], self.robot_position[1], position[0], position[1]))
@@ -255,16 +287,38 @@ class Maze_Game():
 
     # Executes a movement. Returns if the movement was valid and the time taken to do it.
     def move(self, move:str):
+        if move not in self.directions.keys():
+            if move in self.abreviations.keys():
+                move = self.abreviations[move]
+
         if self.is_valid_move(self.robot_position, move):
             new_pos = [(pos1 + pos2*2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
+            intermediate_pos = [(pos1 + pos2) for pos1, pos2 in zip(self.robot_position, self.directions[move])]
             # Change the robot position
             self.robot_position = new_pos
+
+            
+
+            adjacents = utils.get_adjacents(intermediate_pos)
+
+            n_swamps = 0
+            for adjacent in adjacents:
+                if not self.is_in_bounds(adjacent):
+                    continue
+                if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "swamp":
+                    n_swamps += 1
+            
+            
+
             # Number of turns to get to new orientation to be able to move in that direction
             time_to_turn = self.get_change_in_orientation(self.robot_orientation, move)
             # Set the orientation of the robot
             self.robot_orientation = move
             # Time taken to execute the movement
-            time_taken = self.time_to_move + time_to_turn
+            if n_swamps > 0:
+                time_taken = self.swamp_times[n_swamps] + time_to_turn
+            else:
+                time_taken = self.time_to_move + time_to_turn
 
             return True, time_taken
         else:
@@ -325,11 +379,18 @@ class Maze_Game():
         for x, row in enumerate(self.dicovered_grid):
             for y, value in enumerate(row):
                 if [x, y] == self.robot_position:
-                    print("ob", end="")
+                    if self.robot_orientation == "up":
+                        print("↑ ", end="")
+                    elif self.robot_orientation == "down":
+                        print("↓ ", end="")
+                    elif self.robot_orientation == "left":
+                        print("<-", end="")
+                    elif self.robot_orientation == "right":
+                        print("->", end="")
                 elif [x, y] == robot_right:
-                    print(".|", end="")
+                    print(" |", end="")
                 elif [x, y] == robot_left:
-                    print("|R", end="")
+                    print("| ", end="")
                 elif [x, y] == robot_up:
                     print("──", end="")
                 elif [x, y] == robot_down:
@@ -351,7 +412,7 @@ class Maze_Game():
 if __name__ == "__main__":
     # Loads a map
     script_dir = os.path.dirname(__file__)
-    rel_path = "test_maps/map_0.map"
+    rel_path = "test_maps/map_2.map"
     abs_file_path = os.path.join(script_dir, rel_path)
 
     grid, map_data = map_manager.load_map(abs_file_path) #json_loader.grid_from_json(abs_file_path)
