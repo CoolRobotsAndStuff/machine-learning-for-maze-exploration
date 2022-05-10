@@ -6,6 +6,7 @@ import os
 import utils
 import map_manager
 from bresenham import bresenham
+import random
 
 """"
 @grid: la grilla 
@@ -13,7 +14,7 @@ from bresenham import bresenham
 @initial_orientation: donde empieza mirando 
 """
 class Maze_Game():
-    def __init__(self, grid:list, initial_position:tuple, initial_orientation:str="up"):
+    def __init__(self, grid:list, initial_position:tuple, initial_orientation:str=NotImplemented):
         # Distance from the center of the robot inside wich the robot will detect things
         self.detection_distance = 4 * 3
 
@@ -86,6 +87,9 @@ class Maze_Game():
             }
 
         print("initial_position", initial_position)
+
+        if initial_orientation is None:
+            initial_orientation = random.choice(list(self.directions.keys()))
 
         self.reset_game(grid, initial_position, initial_orientation)
     

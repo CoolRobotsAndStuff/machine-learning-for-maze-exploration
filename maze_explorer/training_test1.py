@@ -20,9 +20,9 @@ ip_file_dir = os.path.join(srcipt_dir, 'tracking_uri_IP.txt')
 with open(ip_file_dir, "r") as f:
     tracking_uri = f.read()
     print("MLflow tracking server uri set to:", tracking_uri)
-    mlflow.set_tracking_uri(tracking_uri)
+    #mlflow.set_tracking_uri(tracking_uri)
 
-with mlflow.start_run(experiment_id=1):
+with mlflow.start_run(experiment_id=0):
     
 
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
@@ -83,7 +83,7 @@ with mlflow.start_run(experiment_id=1):
     dqn.compile(Adam(lr=lr), metrics=metrics)
 
     # Okay, now it's time to learn something! We visualize the training here for show, but this slows down training quite a lot. 
-    history = dqn.fit(env, nb_steps=300, visualize=True, verbose=2)
+    history = dqn.fit(env, nb_steps=300, visualize=False, verbose=2)
 
     weight_path = Path('saved_agents')
     weight_path.mkdir(parents=True, exist_ok=True)

@@ -5,6 +5,7 @@ from game import Maze_Game
 import json_loader
 from map_manager import load_map
 import mlflow
+import random
 
 one_hot_node_type_encoder = {
     "undefined":np.array([0, 0, 0]),
@@ -49,7 +50,7 @@ def grid_to_one_hot(grid):
     return np.array(one_hot_grid, dtype=bool)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, maps_dir:str, initial_orientation: str = "up", max_step_n: int = 1000):
+    def __init__(self, maps_dir:str, initial_orientation: str = None, max_step_n: int = 1000):
         self.max_step_n = max_step_n
         self.maps_dir = maps_dir
         self.map_count = len(os.listdir(maps_dir))
