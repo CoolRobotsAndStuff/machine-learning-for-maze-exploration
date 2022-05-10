@@ -5,29 +5,30 @@ from game import Maze_Game
 import json_loader
 from map_manager import load_map
 import mlflow
+import random
 
 one_hot_node_type_encoder = {
-    "undefined": np.array([0, 0, 0]),
-    "tile": np.array([1, 0, 0]),
-    "vortex": np.array([0, 1, 0]),
-    "wall": np.array([0, 0, 1])
+    "undefined":np.array([0, 0, 0]),
+    "tile":     np.array([1, 0, 0]),
+    "vortex":   np.array([0, 1, 0]),
+    "wall":     np.array([0, 0, 1])
 }
 
 one_hot_tile_type_encoder = {
-    "undefined": np.array([1, 0, 0, 0, 0, 0, 0, 0, 0]),
-    "normal": np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
-    "start": np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
-    "connection1-2": np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),
-    "connection1-3": np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
-    "connection2-3": np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),
-    "swamp": np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),
-    "hole": np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),
-    "checkpoint": np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
+    "undefined":    np.array([1, 0, 0, 0, 0, 0, 0, 0, 0]),
+    "normal":       np.array([0, 1, 0, 0, 0, 0, 0, 0, 0]),
+    "start":        np.array([0, 0, 1, 0, 0, 0, 0, 0, 0]),
+    "connection1-2":np.array([0, 0, 0, 1, 0, 0, 0, 0, 0]),
+    "connection1-3":np.array([0, 0, 0, 0, 1, 0, 0, 0, 0]),
+    "connection2-3":np.array([0, 0, 0, 0, 0, 1, 0, 0, 0]),
+    "swamp":        np.array([0, 0, 0, 0, 0, 0, 1, 0, 0]),
+    "hole":         np.array([0, 0, 0, 0, 0, 0, 0, 1, 0]),
+    "checkpoint":   np.array([0, 0, 0, 0, 0, 0, 0, 0, 1])
 }
 
 one_hot_status_encoder = {
-    "occupied": np.array([1, 0, 0]),
-    "undefined": np.array([0, 1, 0]),
+    "occupied":     np.array([1, 0, 0]),
+    "undefined":    np.array([0, 1, 0]),
     "not_occupied": np.array([0, 0, 1])
 }
 
@@ -49,7 +50,7 @@ def grid_to_one_hot(grid):
     return np.array(one_hot_grid, dtype=bool)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, maps_dir:str, initial_orientation: str = "up", max_step_n: int = 1000):
+    def __init__(self, maps_dir:str, initial_orientation: str = None, max_step_n: int = 1000):
         self.max_step_n = max_step_n
         self.maps_dir = maps_dir
         self.map_count = len(os.listdir(maps_dir))
