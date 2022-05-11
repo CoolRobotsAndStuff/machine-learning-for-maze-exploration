@@ -1,26 +1,48 @@
-import mlflow
-
 import os
-from environment import Maze_Environment
+import sys
+import time
+import json
+from pathlib import Path
+import numpy as np
+
 from keras.models import Sequential
 from keras.layers import Dense, Activation, Flatten, Convolution2D, Permute
 from tensorflow.keras.optimizers import Adam
-import numpy as np
-import random
 
 
 from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy, SoftmaxPolicy, GreedyQPolicy, BoltzmannQPolicy, MaxBoltzmannQPolicy, BoltzmannGumbelQPolicy
 from rl.memory import SequentialMemory
-from map_manager import load_map
-import time
-import json
-from pathlib import Path
 
+from map_manager import load_map
+from environment import Maze_Environment
+
+import mlflow
+from mlflow.tracking import MlflowClient
+
+from logger import MultiLogger
+
+from google.cloud import storage
+
+# Path to save all artifacts
+weight_path = Path('artifacts_files')
+weight_path.mkdir(parents=True, exist_ok=True)
+
+# File to keep the terminal output
+logs_path = str(weight_path / 'logs.txt')
+with open(logs_path, 'w'):
+    pass
+
+sys.stdout = MultiLogger((sys.__stdout__,), (logs_path,))
+sys.stderr = MultiLogger((sys.__stderr__,), (logs_path,))
+
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'composed-arch-348513-69f529adb730.json'
+
+gclient = storage.Client()
 
 srcipt_dir = os.path.dirname(os.path.realpath(__file__))
 
-EXPERIMENT_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "experiment_1_config.json")
+EXPERIMENT_PATH = os.path.join(srcipt_dir, "experiment_config.json")
 
 with open(EXPERIMENT_PATH) as f:
     config = json.load(f)
@@ -30,9 +52,29 @@ print(config)
 print("MLflow tracking server uri set to:", config["server_URI"])
 mlflow.set_tracking_uri(config["server_URI"])
 
+# Create an experiment with a name that is unique and case sensitive.
+client = MlflowClient()
+
+try:
+    experiment_id = client.create_experiment(config["name"], artifact_location=config["bucket_URI"])
+
+except:
+    experiment = client.get_experiment_by_name(config["name"])
+    experiment_id = experiment.experiment_id
+
+for key, value in config["tags"].items():
+    client.set_experiment_tag(experiment_id, key, value)
+
+
+
 for i, run in enumerate(config["runs"]):
+
     print("Starting run:", i)
-    mlflow.start_run(experiment_id=2)
+    print("Run started with exp id:", experiment_id)
+    mlflow.start_run(experiment_id=experiment_id)
+    sys.stdout.do_ml_flow_logging = False
+    sys.stderr.do_ml_flow_logging = True
+
     # Log all the parameters from config file
     for key, value in run.items():
         if key == "conv_layers":
@@ -45,8 +87,6 @@ for i, run in enumerate(config["runs"]):
                     mlflow.log_param("dense_" + str(index) + "_" +key1, value1)
         else:
             mlflow.log_param(key, value)
-
-    
 
     # Where to get the maps from
     maps_dir = os.path.join(srcipt_dir, 'test_maps')
@@ -114,19 +154,25 @@ for i, run in enumerate(config["runs"]):
     history = dqn.fit(env, nb_steps=run["total_steps"], visualize=False, verbose=2)
 
     # Save the model and weights
-    weight_path = Path('saved_agents')
-    weight_path.mkdir(parents=True, exist_ok=True)
-
     # Save and log model
+    print("Saving model...")
     model_json = dqn.model.to_json()
     with open(os.path.join(weight_path, "dqn_keras-RL2-model.json"), "w") as json_file:
         json_file.write(model_json)
     mlflow.log_artifact(os.path.join(weight_path, "dqn_keras-RL2-model.json"))
 
     # Save and log weights
+    print("Saving weights...")
     dqn.save_weights(str(weight_path / 'dqn_keras-RL2-weights.hdf5'), overwrite=True)
     mlflow.log_artifact(str(weight_path / 'dqn_keras-RL2-weights.hdf5'))
+    
+    # Log the temrminal output
+    mlflow.log_artifact(str(weight_path / 'logs.txt'))
+
+    sys.stderr.do_ml_flow_logging = False
 
     # End the run
     mlflow.end_run()
+
+    
 
