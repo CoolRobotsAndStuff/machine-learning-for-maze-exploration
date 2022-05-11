@@ -8,6 +8,7 @@
         "conv_layers": [{"filter_n": 0, "size":[0, 0], "strides":1, "activation":"relu"}],
         "dense_layers": [{"units": 0, "activation":"relu"}],
         "policy": "",
+        "total_steps": 0,
         "maxs_steps_in_episode": 1000,
         "memory": "SequentialMemory", 
         "memory_limit":50000, 
