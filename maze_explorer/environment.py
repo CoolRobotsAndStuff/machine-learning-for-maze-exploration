@@ -53,7 +53,7 @@ class Maze_Environment(Maze_Game, gym.Env):
     def __init__(self, maps_dir:str, initial_orientation: str = None, max_step_n: int = 1000):
         self.max_step_n = max_step_n
         self.maps_dir = maps_dir
-        self.map_count = len(os.listdir(maps_dir))
+        self.map_count = len(os.listdir(maps_dir)) - 1
         self.current_map_number = 0
         self.current_step_n = 0
         self.reward_factor = 10
