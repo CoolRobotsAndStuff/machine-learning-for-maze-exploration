@@ -2,6 +2,7 @@
     "server_URI": "http://localhost:5000",
     "bucket_URI": "gcs://bucket-name",
     "name":"",
+    "tags":{"":""},
     "runs":
     [
         {
