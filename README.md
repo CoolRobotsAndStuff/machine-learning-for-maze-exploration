@@ -153,7 +153,8 @@ Si trata de moverse a una posición inválida le damos un reward de -10. Si term
 
    ```
 
-   python3.8 -m pip install numpy gym tensorflow keras mlflow bresenham
+   python3.8 -m pip install numpy gym tensorflow keras mlflow bresenham google-cloud-storage
+
 
    ```
    Instalar fremwork de rl para keras integrado con mlflow
