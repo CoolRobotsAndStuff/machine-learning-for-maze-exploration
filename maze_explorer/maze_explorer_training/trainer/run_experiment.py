@@ -20,23 +20,27 @@ from environment import Maze_Environment
 import mlflow
 from mlflow.tracking import MlflowClient
 
+from mlflow_logger import MlflowLogger
+
 from logger import MultiLogger
 
 from google.cloud import storage
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 # Path to save all artifacts
-weight_path = Path('artifacts_files')
-weight_path.mkdir(parents=True, exist_ok=True)
+artifact_path = current_dir / Path('artifacts_files')
+artifact_path.mkdir(parents=True, exist_ok=True)
 
 # File to keep the terminal output
-logs_path = str(weight_path / 'logs.txt')
+logs_path = str(artifact_path / 'logs.txt')
 with open(logs_path, 'w'):
     pass
 
 sys.stdout = MultiLogger((sys.__stdout__,), (logs_path,))
 sys.stderr = MultiLogger((sys.__stderr__,), (logs_path,))
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = 'composed-arch-348513-69f529adb730.json'
+os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = current_dir + '/composed-arch-348513-69f529adb730.json'
 
 gclient = storage.Client()
 
@@ -56,7 +60,7 @@ mlflow.set_tracking_uri(config["server_URI"])
 client = MlflowClient()
 
 try:
-    experiment_id = client.create_experiment(config["name"], artifact_location=config["bucket_URI"])
+    experiment_id = client.create_experiment(config["name"], artifact_location=config["artifact_bucket_URI"])
 
 except:
     experiment = client.get_experiment_by_name(config["name"])
@@ -65,10 +69,7 @@ except:
 for key, value in config["tags"].items():
     client.set_experiment_tag(experiment_id, key, value)
 
-
-
 for i, run in enumerate(config["runs"]):
-
     print("Starting run:", i)
     print("Run started with exp id:", experiment_id)
     mlflow.start_run(experiment_id=experiment_id)
@@ -89,7 +90,7 @@ for i, run in enumerate(config["runs"]):
             mlflow.log_param(key, value)
 
     # Where to get the maps from
-    maps_dir = os.path.join(srcipt_dir, 'test_maps')
+    maps_dir = config["map_bucket_URI"]
 
     # Create environment
     env = Maze_Environment(maps_dir, None, run["max_steps_in_episode"])
@@ -151,23 +152,23 @@ for i, run in enumerate(config["runs"]):
     
 
     # Train the agent
-    history = dqn.fit(env, nb_steps=run["total_steps"], visualize=False, verbose=2)
+    history = dqn.fit(env, nb_steps=run["total_steps"], visualize=False, verbose=2, callbacks=[MlflowLogger()])
 
     # Save the model and weights
     # Save and log model
     print("Saving model...")
     model_json = dqn.model.to_json()
-    with open(os.path.join(weight_path, "dqn_keras-RL2-model.json"), "w") as json_file:
+    with open(os.path.join(artifact_path, "dqn_keras-RL2-model.json"), "w") as json_file:
         json_file.write(model_json)
-    mlflow.log_artifact(os.path.join(weight_path, "dqn_keras-RL2-model.json"))
+    mlflow.log_artifact(os.path.join(artifact_path, "dqn_keras-RL2-model.json"))
 
     # Save and log weights
     print("Saving weights...")
-    dqn.save_weights(str(weight_path / 'dqn_keras-RL2-weights.hdf5'), overwrite=True)
-    mlflow.log_artifact(str(weight_path / 'dqn_keras-RL2-weights.hdf5'))
+    dqn.save_weights(str(artifact_path / 'dqn_keras-RL2-weights.hdf5'), overwrite=True)
+    mlflow.log_artifact(str(artifact_path / 'dqn_keras-RL2-weights.hdf5'))
     
     # Log the temrminal output
-    mlflow.log_artifact(str(weight_path / 'logs.txt'))
+    mlflow.log_artifact(str(artifact_path / 'logs.txt'))
 
     sys.stderr.do_ml_flow_logging = False
 
