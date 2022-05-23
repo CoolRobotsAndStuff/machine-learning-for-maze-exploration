@@ -1,6 +1,8 @@
 mlruns/
 saved_agents/
 artifacts_files/
+composed-arch-348513-69f529adb730.json
+maze_explorer/maze_explorer_training/trainer/experiment_config.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
