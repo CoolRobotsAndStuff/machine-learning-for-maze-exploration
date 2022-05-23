@@ -1,7 +1,4 @@
-import string
-import numpy as np
-import math
-from grid_node import Node
+from trainer.grid_node import Node
 
 def make_grid(dimensions) -> list:
     grid = list()

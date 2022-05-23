@@ -1,10 +1,9 @@
 import numpy as np
 import numpy.ma as ma
 import copy
-import json_loader
 import os
-import utils
-import map_manager
+import trainer.utils as utils
+import trainer.map_manager as map_manager
 from bresenham import bresenham
 import random
 

@@ -1,7 +1,10 @@
 import pickle
 import os
+import sys
 
 from google.cloud import storage
+
+sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 class MapManager:
     def __init__(self, bucket_path, client=None):

@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import gym
-from game import Maze_Game
-from map_manager import MapManager
+from trainer.game import Maze_Game
+from trainer.map_manager import MapManager
 
 one_hot_node_type_encoder = {
     "undefined":np.array([0, 0, 0]),

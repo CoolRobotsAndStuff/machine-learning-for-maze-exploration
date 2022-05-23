@@ -14,14 +14,14 @@ from rl.agents.dqn import DQNAgent
 from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy, SoftmaxPolicy, GreedyQPolicy, BoltzmannQPolicy, MaxBoltzmannQPolicy, BoltzmannGumbelQPolicy
 from rl.memory import SequentialMemory
 
-from environment import Maze_Environment
+from trainer.environment import Maze_Environment
 
 import mlflow
 from mlflow.tracking import MlflowClient
 
-from mlflow_logger import MlflowLogger
+from trainer.mlflow_logger import MlflowLogger
 
-from logger import MultiLogger
+from trainer.logger import MultiLogger
 
 from google.cloud import storage
 
