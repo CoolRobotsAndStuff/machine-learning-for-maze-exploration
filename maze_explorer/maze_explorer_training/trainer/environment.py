@@ -2,10 +2,7 @@ import numpy as np
 import os
 import gym
 from game import Maze_Game
-import json_loader
-from map_manager import load_map
-import mlflow
-import random
+from map_manager import MapManager
 
 one_hot_node_type_encoder = {
     "undefined":np.array([0, 0, 0]),
@@ -50,17 +47,16 @@ def grid_to_one_hot(grid):
     return np.array(one_hot_grid, dtype=bool)
 
 class Maze_Environment(Maze_Game, gym.Env):
-    def __init__(self, maps_dir:str, initial_orientation: str = None, max_step_n: int = 1000):
+    def __init__(self, gcloud_client,  map_bucket:str, max_step_n: int = 1000, initial_orientation: str = None):
         self.max_step_n = max_step_n
-        self.maps_dir = maps_dir
-        self.map_count = len(os.listdir(maps_dir)) - 1
-        self.current_map_number = 0
         self.current_step_n = 0
         self.reward_factor = 10
 
+        self.map_manager = MapManager(bucket_path=map_bucket, client=gcloud_client)
+
         self.cummulative_reward = 0
         
-        self.grid, map_data = self.get_current_map()
+        self.grid, map_data = self.map_manager.get_next_map()
         self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
         super().__init__(self.grid, map_data["start_node"], initial_orientation)
 
@@ -79,8 +75,16 @@ class Maze_Environment(Maze_Game, gym.Env):
             3: "right"
         }
 
-    def get_current_map(self):
-        return load_map(os.path.join(self.maps_dir, "map_" + str(self.current_map_number) + ".map"))
+    def reset(self):
+        self.current_step_n = 0
+        self.cummulative_reward = 0
+
+        self.grid, map_data = self.map_manager.get_next_map()
+
+        self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
+        discovered_grid = self.reset_game(self.grid, map_data["start_node"], self.initial_orientation)
+
+        return grid_to_one_hot(discovered_grid)
 
     def step(self, action):
         self.current_step_n += 1
@@ -101,18 +105,6 @@ class Maze_Environment(Maze_Game, gym.Env):
 
         return state, reward, done, {}
     
-    def reset(self):
-        self.current_step_n = 0
-        self.cummulative_reward = 0
-
-        if self.current_map_number >= self.map_count:
-            self.current_map_number = 0
-        self.current_map_number += 1
-        self.grid, map_data = self.get_current_map()
-        self.final_reward = map_data["accesible_vortex_n"] * self.reward_factor
-        discovered_grid = self.reset_game(self.grid, map_data["start_node"], self.initial_orientation)
-
-        return grid_to_one_hot(discovered_grid)
     
     def clear(self):
         if os.name == "nt":
@@ -121,12 +113,11 @@ class Maze_Environment(Maze_Game, gym.Env):
             _ = os.system('clear')
 
     def render(self, mode='human'):
-        self.clear()
+        #self.clear()
         self.print_grid()
 
-
-
-def main():
+    
+if __name__ == '__main__':
     script_dir = os.path.dirname(__file__)
     maps_dir = os.path.join(script_dir, "test_maps")
     # Initialize the environment
@@ -139,8 +130,4 @@ def main():
         if done:
             print("Explored the entire maze or reached the maximum number of steps")
             break
-    
-    
-if __name__ == '__main__':
-    main()
 
