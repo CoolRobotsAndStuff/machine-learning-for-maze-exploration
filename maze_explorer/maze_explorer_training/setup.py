@@ -9,5 +9,5 @@ setup(
     author = 'IITA',
     author_email = 'aledeum.saf@gmail.com',
     packages=find_packages(),
-    install_requires=["numpy",],
+    install_requires=REQUIRED_PACKAGES,
     description='An example package for training on Cloud ML Engine.')
