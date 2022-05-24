@@ -1,13 +1,15 @@
 from setuptools import find_packages
 from setuptools import setup
+import glob
 
 REQUIRED_PACKAGES = ["numpy", "gym", "tensorflow", "keras", "mlflow", "bresenham", "google-cloud-storage", "keras-rl2"]
 
 setup(
-    name='maze_explorer_training',
+    name='trainer',
     version='0.1',
-    author = 'IITA',
-    author_email = 'aledeum.saf@gmail.com',
-    packages=find_packages(),
     install_requires=REQUIRED_PACKAGES,
-    description='An example package for training on Cloud ML Engine.')
+    packages=find_packages(),
+    include_package_data=True,
+    data_files=['trainer/experiment_config.json',],
+    description='My training application package.'
+)

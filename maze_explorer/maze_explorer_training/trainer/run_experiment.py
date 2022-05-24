@@ -144,7 +144,7 @@ sys.stdout = MultiLogger((sys.__stdout__,), (logs_path,))
 sys.stderr = MultiLogger((sys.__stderr__,), (logs_path,))
 
 
-os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SCRIPT_DIR + '/composed-arch-348513-69f529adb730.json'
+#os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = SCRIPT_DIR + '/composed-arch-348513-69f529adb730.json'
 gclient = storage.Client()
 
 
