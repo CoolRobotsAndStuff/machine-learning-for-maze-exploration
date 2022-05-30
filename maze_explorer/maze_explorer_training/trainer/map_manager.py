@@ -59,10 +59,9 @@ if __name__ == "__main__":
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = current_dir + '/composed-arch-348513-69f529adb730.json'
     client = storage.Client()
     my_manager = MapManager("gs://map_dataset", client=client)
-    for _ in range(10):
-        map, map_data = my_manager.get_next_map()
-        my_manager.print_grid(map)
-        print(map_data)
+    map, map_data = my_manager.get_map("map_56787.map")
+    my_manager.print_grid(map)
+    print(map_data)
 
 
     
