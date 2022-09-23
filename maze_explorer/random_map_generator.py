@@ -1058,7 +1058,7 @@ def normalize_to_size(grid, final_shape):
     return new_grid
 
             
-MAX_SIZE = 32
+MAX_SIZE = 16
 MIN_SIZE = 12
 
 MIN_AREA_SIZE = 3
