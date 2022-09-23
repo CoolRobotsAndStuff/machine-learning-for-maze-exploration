@@ -343,7 +343,7 @@ class Maze_Game():
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
         #print("left", self.reacheable - self.explored)
-        return self.reacheable.issubset(self.explored) and self.is_robot_in_start()
+        return self.reacheable.issubset(self.explored) #and self.is_robot_in_start()
     
     # Saves the parts of the map the robot has passed trough
     def update_explored(self):

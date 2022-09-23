@@ -4,7 +4,15 @@ import sys
 
 from google.cloud import storage
 
+try:
+    import trainer.random_map_generator as random_map_generator
+except:
+    import random_map_generator
+
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
+
+current_dir = os.path.dirname(__file__)
 
 class MapManager:
     def __init__(self, bucket_path, client=None):
@@ -19,17 +27,35 @@ class MapManager:
 
         self.current_map_index = 0
 
-    def unpickle_map(file_path):
+    def generate_maps(self, num_maps):
+        """
+        Generates a set of maps for the maze explorer.
+        :param num_maps: The number of maps to generate.
+        """
+        for i in range(num_maps):
+            map = random_map_generator.generate_map(visualize=False)
+            with open(current_dir + '/small_maps/map_' + str(i) + ".map", 'wb') as map_file:
+                pickle.dump(map, map_file)
+            print("Generated " + str(i) + " / " + str(num_maps - 1) + "  -  " + str(round(i/(num_maps - 1)*100)) + "%")
+
+    def unpickle_map(self, file_path):
         with open(file_path, "rb") as map_file:
             unpickled_map = pickle.load(map_file)
             return unpickled_map
     
     def get_map(self, map_name):
+        """
         map_blob = self.bucket.get_blob(map_name)
         if map_blob is None:
             return None
         pickled_map = map_blob.download_as_bytes()
-        return pickle.loads(pickled_map)
+        """
+        try:
+            with open("trainer/small_maps/"+ map_name, "rb") as pickled_map:
+                unpickled_map = pickle.load(pickled_map) 
+        except:
+            unpickled_map = None
+        return unpickled_map
 
     # Prints the grid
     def print_grid(self, grid):
@@ -55,6 +81,7 @@ class MapManager:
         return map
 
 if __name__ == "__main__":
+    """
     current_dir = os.path.dirname(os.path.abspath(__file__))
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = current_dir + '/composed-arch-348513-69f529adb730.json'
     client = storage.Client()
@@ -62,6 +89,9 @@ if __name__ == "__main__":
     map, map_data = my_manager.get_map("map_56787.map")
     my_manager.print_grid(map)
     print(map_data)
-
-
-    
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = current_dir + '/composed-arch-348513-69f529adb730.json'
+    client = storage.Client()
+    my_manager = MapManager("gs://map_dataset", client=client)
+    my_manager.generate_maps(10)

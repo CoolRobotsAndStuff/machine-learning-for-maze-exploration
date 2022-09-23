@@ -2,4 +2,4 @@ PACKAGE_PATH="./maze_explorer/maze_explorer_training/trainer"
 MODULE_NAME="trainer.run_experiment"
 JOB_DIR="gs://machine-learning-for-maze-exploration-staging"
 
-/usr/bin/gcloud ai-platform local train --package-path $PACKAGE_PATH --module-name $MODULE_NAME --job-dir $JOB_DIR
+gcloud ai-platform local train --package-path $PACKAGE_PATH --module-name $MODULE_NAME --job-dir $JOB_DIR

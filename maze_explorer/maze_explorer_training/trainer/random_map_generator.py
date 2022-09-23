@@ -1,6 +1,11 @@
 import random
-from grid_maker import make_grid
-from grid_node import Node
+try:
+    from trainer.grid_maker import make_grid
+    from trainer.grid_node import Node
+
+except:
+    from grid_maker import make_grid
+    from grid_node import Node
 import utils
 import numpy as np
 import copy

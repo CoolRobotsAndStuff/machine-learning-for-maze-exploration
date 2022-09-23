@@ -1,4 +1,7 @@
-from trainer.grid_node import Node
+try:
+    from trainer.grid_node import Node
+except:
+    from grid_node import Node
 
 def make_grid(dimensions) -> list:
     grid = list()
