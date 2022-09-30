@@ -337,13 +337,20 @@ class Maze_Game():
         for adjacent in adjacents:
             if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "start":
                 return True
+
+    def is_robot_in_purple(self):
+        adjacents = utils.get_adjacents(self.robot_position, include_straight = False, include_diagonals=True)
+        for adjacent in adjacents:
+            if self.entire_grid[adjacent[0]][adjacent[1]].tile_type == "connection2-3":
+                return True
     
     # If the robot has explored the required part of the maze and gone back to the start
     def finished(self):
         #print("reacheable", self.reacheable)
         #print("explored", self.explored)
         #print("left", self.reacheable - self.explored)
-        return self.reacheable.issubset(self.explored) #and self.is_robot_in_start()
+        #return self.reacheable.issubset(self.explored) #and self.is_robot_in_start()
+        return self.is_robot_in_purple()
     
     # Saves the parts of the map the robot has passed trough
     def update_explored(self):

@@ -71,7 +71,8 @@ class MapManager:
         print(map_data)
     
     def get_next_map(self):
-        map_name = "map_" + str(self.current_map_index) + ".map"
+        #map_name = "map_" + str(self.current_map_index) + ".map"
+        map_name = "map_7.map"
         map = self.get_map(map_name)
         if map is None:
             self.current_map_index = 0
@@ -94,4 +95,6 @@ if __name__ == "__main__":
     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = current_dir + '/composed-arch-348513-69f529adb730.json'
     client = storage.Client()
     my_manager = MapManager("gs://map_dataset", client=client)
-    my_manager.generate_maps(10)
+    for i in range(10):
+        mm = my_manager.get_map("map_" + str(i) + ".map")
+        my_manager.print_grid(mm[0])

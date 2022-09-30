@@ -10,6 +10,6 @@ setup(
     install_requires=REQUIRED_PACKAGES,
     packages=find_packages(),
     include_package_data=True,
-    data_files=['trainer/experiment_config.json', "trainer/small_maps/"],
+    data_files=['trainer/experiment_config.json', "trainer/small_maps/", "trainer/artifacts_files/"],
     description='My training application package.'
 )
