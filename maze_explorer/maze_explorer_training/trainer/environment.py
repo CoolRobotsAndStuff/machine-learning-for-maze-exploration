@@ -3,6 +3,7 @@ import os
 import gym
 from trainer.game import Maze_Game
 from trainer.map_manager import MapManager
+import copy
 
 one_hot_node_type_encoder = {
     "undefined":np.array([0, 0, 0]),
@@ -31,14 +32,20 @@ one_hot_status_encoder = {
 
 # Encodes a single node
 def get_one_hot_form_node(node):
-    arr = np.concatenate((one_hot_node_type_encoder[node.node_type], one_hot_status_encoder[node.status], one_hot_tile_type_encoder[node.tile_type]))
-    arr1 = np.array([int(node.is_robots_position), int(node.explored)])
+    arr = np.copy(one_hot_status_encoder[node.status])
+    arr1 = np.array([int(node.explored), ])
     arr = np.concatenate((arr, arr1))
+    if node.node_type == "tile":
+        arr = np.concatenate(arr, one_hot_tile_type_encoder[node.tile_type])
+    if node.node_type == "vortex":
+        arr1 = np.array([int(node.is_robots_position),])
+        arr = np.concatenate((arr, arr1))
+    
     return arr
 
 # Encodes the entire grid and returns it as a numpy array
 def grid_to_one_hot(grid):
-    one_hot_grid = list()
+    one_hot_array = np.array()
     for row in grid:
         one_hot_row = list()
         for node in row:
